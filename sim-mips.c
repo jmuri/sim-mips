@@ -68,7 +68,7 @@ main (int argc, char *argv[]){
 		}
 	}
 
-	//Jeff muri likes asian food
+	//Jeff muri likes spicy asian food
 	//Jackson like whaners
 	//start your code from here
 }
