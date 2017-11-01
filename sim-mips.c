@@ -67,6 +67,8 @@ main (int argc, char *argv[]){
 			mips_reg[i]=0;
 		}
 	}
+
+	//Jeff muri likes asian food
 	
 	//start your code from here
 }
