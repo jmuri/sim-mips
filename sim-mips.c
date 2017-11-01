@@ -11,6 +11,14 @@
 #define BATCH 0
 #define REG_NUM 32
 
+typedef struct latch{
+
+}
+
+typedef struct inst{
+
+}
+
 struct inst parser(){
 
 }
