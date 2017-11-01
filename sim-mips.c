@@ -10,6 +10,39 @@
 #define SINGLE 1
 #define BATCH 0
 #define REG_NUM 32
+
+struct inst parser(){
+
+}
+
+char *progScanner(){
+
+}
+
+char *regNumberConverter(){
+
+}
+
+void IF(){
+
+}
+
+void ID(){
+
+}
+
+void EX(){
+
+}
+
+void MEM(){
+
+}
+
+void WB(){
+	
+}
+
 main (int argc, char *argv[]){
 	int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
 	int c,m,n;
