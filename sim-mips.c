@@ -11,12 +11,15 @@
 #define BATCH 0
 #define REG_NUM 32
 
-typedef struct latch{
+struct latch{
 
 }
 
-typedef struct inst{
-
+struct inst{
+	int opcode;
+	int rs;
+	int rt;
+	int rd;
 }
 
 struct inst parser(){
