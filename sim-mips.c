@@ -80,7 +80,6 @@ void parser(char *instr_str){
 }
 
 void IF(){
-
 }
 
 void ID(){
@@ -109,11 +108,11 @@ main (int argc, char *argv[]){
 	long pgm_c=0;//program counter
 	long sim_cycle=0;//simulation cycle counter
 	//define your own counter for the usage of each pipeline stage here
-	int IF;
-	int ID;
-	int EX;
-	int MEM;
-	int WB;
+	static int IF_counter;
+	static int ID_counter;
+	static int EX_counter;
+	static int MEM_counter;
+	static int WB_counter;
 	
 	int test_counter=0;
 	FILE *input=NULL;
@@ -169,8 +168,6 @@ main (int argc, char *argv[]){
 	/////////////////////////////////////////////////End of code1.c
 
 	//Start your code here
-
-
 
 	char *instr_str;
 	instr_str = malloc(100*sizeof(char));
