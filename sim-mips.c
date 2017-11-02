@@ -107,6 +107,18 @@ main (int argc, char *argv[]){
 		exit(0);
 	}
 	//initialize registers and program counter
+
+
+
+
+
+
+
+
+
+
+
+	//beginning of code3.c, code given to us to be put at end of main
 	if(sim_mode==1){
 		for (i=0;i<REG_NUM;i++){
 			mips_reg[i]=0;
