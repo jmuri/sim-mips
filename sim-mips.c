@@ -17,9 +17,10 @@ struct latch{
 
 struct inst{
 	int opcode;
+	int rd;
 	int rs;
 	int rt;
-	int rd;
+	int immediate;
 }
 
 struct inst parser(){
