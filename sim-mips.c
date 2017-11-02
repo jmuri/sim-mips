@@ -26,13 +26,13 @@ struct inst{
 	int rs;
 	int rt;
 	int immediate;
-}
+};
 
 struct inst parser(){
 
-}
+};
 
-char *progScanner(){
+char *progScanner(char *intr_str){
 
 }
 
@@ -98,6 +98,7 @@ main (int argc, char *argv[]){
 		c=atoi(argv[4]);
 		input=fopen(argv[5],"r");
 		output=fopen(argv[6],"w");
+
 		
 	}
 	//if the command line input was incorrect, print out the correct way to write it
@@ -124,9 +125,13 @@ main (int argc, char *argv[]){
 	//End of code1.c
 
 	//Start your code here
+	char *instr_str;
+	instr_str = malloc(100*sizeof(char));
 
-
-
+	while(fgets(instr_str, 100, input))
+		printf("next inst is %s", instr_str);
+		progScanner(instr_str);
+	fclose(input);
 
 
 
@@ -157,7 +162,7 @@ main (int argc, char *argv[]){
 
 
 
-	
+	float ifUtil, idUtil, exUtil, memUtil, wbUtil = 0;
 	//Beginning of code3.c, code given to us to be put at the end of main
 	if(sim_mode==0){
 		fprintf(output,"program name: %s\n",argv[5]);
