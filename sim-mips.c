@@ -35,10 +35,19 @@ struct inst{
 };
 
 char *progScanner(char *instr_str){
+	char delimiters[] = ",()";
+	char *scanned;
 
+	scanned = strtok(instr_str, delimiters);
+	
+	while(scanned != NULL){
+		printf("next is %s\n", scanned);
+		scanned = strcat(scanned, strtok(NULL, delimiters));
+	}
+	return scanned;
 }
 
-char *regNumberConverter(){
+char *regNumberConverter(char *instr_str){
 
 }
 
@@ -135,7 +144,6 @@ main (int argc, char *argv[]){
 	instr_str = malloc(100*sizeof(char));
 
 	while(fgets(instr_str, 100, input))
-		printf("next inst is %s", instr_str);
 		progScanner(instr_str);
 	fclose(input);
 
