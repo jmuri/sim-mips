@@ -42,14 +42,16 @@ struct inst inst_mem[102];
 
 char *progScanner(char *instr_str){
 	char delimiters[] = ",()";
-	char *scanned;
+	char *scanned = (char*)malloc(100*sizeof(char));
+	char* token;
 
-	scanned = strtok(instr_str, delimiters);
+	token = strtok(instr_str, delimiters);
 	
-	while(scanned != NULL){
-		printf("next is %s\n", scanned);
-		scanned = strcat(scanned, strtok(NULL, delimiters));
+	while(token != NULL){
+		strcat(scanned, token);
+		token = strtok(NULL, delimiters);
 	}
+	printf("next is %s\n", scanned);
 	return scanned;
 }
 
