@@ -91,6 +91,11 @@ main (int argc, char *argv[]){
 	long pgm_c=0;//program counter
 	long sim_cycle=0;//simulation cycle counter
 	//define your own counter for the usage of each pipeline stage here
+	int IF;
+	int ID;
+	int EX;
+	int MEM;
+	int WB;
 	
 	int test_counter=0;
 	FILE *input=NULL;
