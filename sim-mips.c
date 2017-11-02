@@ -41,14 +41,30 @@ struct inst inst_mem[102];
 
 
 char *progScanner(char *instr_str){
-	char delimiters[] = ",()";
+	char delimiters[] = " ,()";
 	char *scanned = (char*)malloc(100*sizeof(char));
 	char* token;
+
+	//following loop and if statement checks for mismatched parenthesis
+	int count =0;
+	for(int i=0; i<strlen(instr_str); i++){
+		if (instr_str[i] == '(') count++;
+		else if(instr_str[i] == ')') count--;
+		if (count<0){ 
+			printf("error: %s is an invalid instruction\n", instr_str);
+			exit(1);
+		}
+	}
+	if (count != 0){ 
+		printf("error: %s is an invalid instruction\n", instr_str);
+		exit(1);
+	}
 
 	token = strtok(instr_str, delimiters);
 	
 	while(token != NULL){
 		strcat(scanned, token);
+		strcat(scanned, " ");
 		token = strtok(NULL, delimiters);
 	}
 	printf("next is %s\n", scanned);
