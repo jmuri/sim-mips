@@ -12,7 +12,12 @@
 #define REG_NUM 32
 
 struct latch{
-	
+	int valid; 	//indicates whether the latch is currently being read by the phase after it
+	int opcode;	//indicates the opcode of operation
+	int dest; 	//indicates the destination register of an operation using writeback
+	int data1;	//used for various storage of different data
+	int data2;
+	int data3;
 }
 
 struct inst{
