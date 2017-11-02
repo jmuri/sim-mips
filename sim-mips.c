@@ -12,7 +12,7 @@
 #define REG_NUM 32
 
 struct latch{
-
+	
 }
 
 struct inst{
@@ -75,6 +75,7 @@ main (int argc, char *argv[]){
 		printf("%s ",argv[i]);
 	}
 	printf("\n");
+	//if there is the correct amount of arguements
 	if(argc==7){
 		if(strcmp("-s",argv[1])==0){
 			sim_mode=SINGLE;
@@ -94,12 +95,13 @@ main (int argc, char *argv[]){
 		output=fopen(argv[6],"w");
 		
 	}
-	
+	//if the command line input was incorrect, print out the correct way to write it
 	else{
 		printf("Usage: ./sim-mips -s m n c input_name output_name (single-sysle mode)\n or \n ./sim-mips -b m n c input_name  output_name(batch mode)\n");
 		printf("m,n,c stand for number of cycles needed by multiplication, other operation, and memory access, respectively\n");
 		exit(0);
 	}
+	//print explanations if input or output file could not be created or opened`
 	if(input==NULL){
 		printf("Unable to open input or output file\n");
 		exit(0);
