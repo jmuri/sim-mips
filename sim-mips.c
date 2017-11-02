@@ -6,6 +6,7 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
+#include <stdint.h>
 //feel free to add here any additional library names you may need 
 #define SINGLE 1
 #define BATCH 0
@@ -19,12 +20,6 @@ struct latch{
 	int data2;
 	int data3;
 };
-//Global Structs
-//Initialize Latches
-struct latch IF_ID = {0};
-struct latch ID_EX = {0};
-struct latch EX_MEM = {0};
-struct latch MEM_WB = {0};
 
 struct inst{
 	int opcode;
@@ -33,6 +28,17 @@ struct inst{
 	int rt;
 	int immediate;
 };
+
+//Global Variables
+//Initialize Latches
+struct latch IF_ID = {0};
+struct latch ID_EX = {0};
+struct latch EX_MEM = {0};
+struct latch MEM_WB = {0};
+//initialize instruction memory and data memory
+int32_t data_mem[512];
+struct inst inst_mem[102]; 
+
 
 char *progScanner(char *instr_str){
 	char delimiters[] = ",()";
@@ -137,9 +143,12 @@ main (int argc, char *argv[]){
 			mips_reg[i]=0;
 		}
 	}
-	//End of code1.c
+	/////////////////////////////////////////////////End of code1.c
 
 	//Start your code here
+
+
+
 	char *instr_str;
 	instr_str = malloc(100*sizeof(char));
 
@@ -151,7 +160,7 @@ main (int argc, char *argv[]){
 
 
 
-	//code2.c: The following code will output the register calue to 
+	/////////////////////////////////////////////////code2.c: The following code will output the register calue to 
 	//screen at every cycle and wait for the ENTER key to be pressed;
 	//this will make it proceed to the next cycle
 	printf("cycle: %d ",sim_cycle);
