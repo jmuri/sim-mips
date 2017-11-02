@@ -55,7 +55,9 @@ void WB(){
 	
 }
 
+
 main (int argc, char *argv[]){
+	//Beginning of code1.c
 	int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
 	int c,m,n;
 	int i;//for loop counter
@@ -106,25 +108,29 @@ main (int argc, char *argv[]){
 		printf("Cannot create output file\n");
 		exit(0);
 	}
-	//initialize registers and program counter
-
-
-
-
-
-
-
-
-
-
-
-	//beginning of code3.c, code given to us to be put at end of main
+	//Initalize registers and program counter
 	if(sim_mode==1){
 		for (i=0;i<REG_NUM;i++){
 			mips_reg[i]=0;
 		}
 	}
-	else if(sim_mode==0){
+	//End of code1.c
+
+	//Start your code here
+
+
+
+
+
+
+
+
+
+
+
+	
+	//Beginning of code3.c, code given to us to be put at the end of main
+	if(sim_mode==0){
 		fprintf(output,"program name: %s\n",argv[5]);
 		fprintf(output,"stage utilization: %f  %f  %f  %f  %f \n",
                              ifUtil, idUtil, exUtil, memUtil, wbUtil);
@@ -142,6 +148,7 @@ main (int argc, char *argv[]){
 	fclose(input);
 	fclose(output);
 	return 0;
+	//End of code3.c
 
 	//Jeff muri likes spicy asian food
 	//Jackson like whaners
