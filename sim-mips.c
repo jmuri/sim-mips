@@ -19,6 +19,12 @@ struct latch{
 	int data2;
 	int data3;
 };
+//Global Structs
+//Initialize Latches
+struct latch IF_ID = {0};
+struct latch ID_EX = {0};
+struct latch EX_MEM = {0};
+struct latch MEM_WB = {0};
 
 struct inst{
 	int opcode;
