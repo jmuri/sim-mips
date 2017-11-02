@@ -166,8 +166,7 @@ main (int argc, char *argv[]){
 	//Beginning of code3.c, code given to us to be put at the end of main
 	if(sim_mode==0){
 		fprintf(output,"program name: %s\n",argv[5]);
-		fprintf(output,"stage utilization: %f  %f  %f  %f  %f \n",
-                             ifUtil, idUtil, exUtil, memUtil, wbUtil);
+		fprintf(output,"stage utilization: %f  %f  %f  %f  %f \n", ifUtil, idUtil, exUtil, memUtil, wbUtil);
                      // add the (double) stage_counter/sim_cycle for each 
                      // stage following sequence IF ID EX MEM WB
 		
