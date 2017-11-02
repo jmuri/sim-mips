@@ -28,15 +28,15 @@ struct inst{
 	int immediate;
 };
 
-struct inst parser(){
-
-};
-
-char *progScanner(char *intr_str){
+char *progScanner(char *instr_str){
 
 }
 
 char *regNumberConverter(){
+
+}
+
+void parser(char *instr_str){
 
 }
 
