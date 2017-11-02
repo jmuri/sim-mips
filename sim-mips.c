@@ -18,7 +18,7 @@ struct latch{
 	int data1;	//used for various storage of different data
 	int data2;
 	int data3;
-}
+};
 
 struct inst{
 	int opcode;
