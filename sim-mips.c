@@ -67,7 +67,6 @@ char *progScanner(char *instr_str){
 		strcat(scanned, " ");
 		token = strtok(NULL, delimiters);
 	}
-	printf("next is %s\n", scanned);
 	return scanned;
 }
 
@@ -217,7 +216,7 @@ main (int argc, char *argv[]){
 	instr_str = malloc(100*sizeof(char));
 
 	while(fgets(instr_str, 100, input))
-		progScanner(instr_str);
+		regNumberConverter(progScanner(instr_str));
 	fclose(input);
 
 
