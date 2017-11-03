@@ -37,7 +37,7 @@ struct latch EX_MEM = {0};
 struct latch MEM_WB = {0};
 //initialize instruction memory and data memory
 int32_t data_mem[512];
-struct inst inst_mem[102]; 
+struct inst inst_mem[512];
 
 
 char *progScanner(char *instr_str){
@@ -109,7 +109,8 @@ char delimiter[] = " $";
     else if(!strcmp(token, "gp")) strcat(converted, "28");
     else if(!strcmp(token, "sp")) strcat(converted, "29"); 
     else if(!strcmp(token, "fp")) strcat(converted, "30"); 
-    else if(!strcmp(token, "ra")) strcat(converted, "31"); 
+    else if(!strcmp(token, "ra")) strcat(converted, "31");
+    
     else strcat(converted, token); 
     strcat(converted, " "); 
     token = strtok(NULL, delimiter); 
@@ -216,7 +217,7 @@ main (int argc, char *argv[]){
 	instr_str = malloc(100*sizeof(char));
 
 	while(fgets(instr_str, 100, input))
-		regNumberConverter(progScanner(instr_str));
+		parser(regNumberConverter(progScanner(instr_str)));
 	fclose(input);
 
 
