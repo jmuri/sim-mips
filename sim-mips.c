@@ -41,7 +41,7 @@ struct inst inst_mem[102];
 
 
 char *progScanner(char *instr_str){
-	char delimiters[] = " ,()";
+	char delimiters[] = " ,()\n";
 	char *scanned = (char*)malloc(100*sizeof(char));
 	char* token;
 
@@ -72,7 +72,51 @@ char *progScanner(char *instr_str){
 }
 
 char *regNumberConverter(char *instr_str){
-
+char delimiter[] = " $"; 
+  char *converted = (char*)malloc(100*sizeof(char)); 
+  char* token; 
+  char temp; 
+ 
+  token = strtok(instr_str, delimiter); 
+  while(token != NULL){ 
+    if(!strcmp(token, "zero")) strcat(converted, "0"); 
+    else if(!strcmp(token, "at")) strcat(converted, "1"); 
+    else if(!strcmp(token, "v0")) strcat(converted, "2"); 
+    else if(!strcmp(token, "v1")) strcat(converted, "3"); 
+    else if(!strcmp(token, "a0")) strcat(converted, "4"); 
+    else if(!strcmp(token, "a1")) strcat(converted, "5"); 
+    else if(!strcmp(token, "a2")) strcat(converted, "6"); 
+    else if(!strcmp(token, "a3")) strcat(converted, "7"); 
+    else if(!strcmp(token, "t0")) strcat(converted, "8"); 
+    else if(!strcmp(token, "t1")) strcat(converted, "9"); 
+    else if(!strcmp(token, "t2")) strcat(converted, "10"); 
+    else if(!strcmp(token, "t3")) strcat(converted, "11"); 
+    else if(!strcmp(token, "t4")) strcat(converted, "12"); 
+    else if(!strcmp(token, "t5")) strcat(converted, "13"); 
+    else if(!strcmp(token, "t6")) strcat(converted, "14"); 
+    else if(!strcmp(token, "t7")) strcat(converted, "15"); 
+    else if(!strcmp(token, "s0")) strcat(converted, "16"); 
+    else if(!strcmp(token, "s1")) strcat(converted, "17"); 
+    else if(!strcmp(token, "s2")) strcat(converted, "18"); 
+    else if(!strcmp(token, "s3")) strcat(converted, "19"); 
+    else if(!strcmp(token, "s4")) strcat(converted, "20"); 
+    else if(!strcmp(token, "s5")) strcat(converted, "21"); 
+    else if(!strcmp(token, "s6")) strcat(converted, "22"); 
+    else if(!strcmp(token, "s7")) strcat(converted, "23"); 
+    else if(!strcmp(token, "t8")) strcat(converted, "24"); 
+    else if(!strcmp(token, "t9")) strcat(converted, "25"); 
+    else if(!strcmp(token, "k0")) strcat(converted, "26"); 
+    else if(!strcmp(token, "k1")) strcat(converted, "27"); 
+    else if(!strcmp(token, "gp")) strcat(converted, "28");
+    else if(!strcmp(token, "sp")) strcat(converted, "29"); 
+    else if(!strcmp(token, "fp")) strcat(converted, "30"); 
+    else if(!strcmp(token, "ra")) strcat(converted, "31"); 
+    else strcat(converted, token); 
+    strcat(converted, " "); 
+    token = strtok(NULL, delimiter); 
+  } 
+  printf("%s\n", converted); 
+  return converted; 
 }
 
 void parser(char *instr_str){
