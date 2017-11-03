@@ -123,7 +123,7 @@ void parser(char *instr_str){
 
 }
 
-void IF(int counter){
+void IF(){
 /*Fetches the instruction struct form memory
   Checks if valid bit in IF_ID latch is 1
   Writes istr.opcode into latch.opcode 
