@@ -26,7 +26,7 @@ struct inst{
 	int rd;
 	int rs;
 	int rt;
-	int immediate;
+	int imm;
 };
 
 //Global Variables
@@ -123,11 +123,35 @@ void parser(char *instr_str){
 
 }
 
-void IF(){
+void IF(int counter){
+/*Fetches the instruction struct form memory
+  Checks if valid bit in IF_ID latch is 1
+  Writes istr.opcode into latch.opcode 
+  Writes istr.rd into latch.dest 
+  Writes istr.rs into latch.data1
+  Writes istr.rt into latch.data2
+  Writes istr.imm into latch.data3i
+  Sets valid bit to 0	*/
+  
 }
 
-void ID(){
+void ID(long mips_reg[]){
+/*	Checks if valid bit in IF_ID = 0
+	Writes IF_ID.opcode ID_EX.opcode
+	If add, sub, mul
+	*********************************
+	Writes IF_ID.dest into ID_EX.dest
+	Writes mips_reg[IF_ID.data1] into ID_EX.data1
+	Writes mips_reg[IF_ID.data2] into ID_EX.data2
 
+	Else if addi, lw, sw
+	*********************************
+	Writes IF_ID.data2 into ID_EX.dest
+	Writes iF_ID.data1 into ID_EX.data1
+	Writes IF_ID.data3 into ID_EX.data2
+
+	Else beq...
+ */
 }
 
 void EX(){
@@ -219,10 +243,7 @@ main (int argc, char *argv[]){
 	while(fgets(instr_str, 100, input))
 		parser(regNumberConverter(progScanner(instr_str)));
 	fclose(input);
-
-
-
-
+	
 
 	/////////////////////////////////////////////////code2.c: The following code will output the register calue to 
 	//screen at every cycle and wait for the ENTER key to be pressed;
