@@ -26,8 +26,11 @@ struct inst{
 	int rd;
 	int rs;
 	int rt;
-	int imm;
+	int immediate;
+	int offset;
 };
+
+enum opcodes{add, addi, sub, mul, lw, sw, beq};
 
 //Global Variables
 //Initialize Latches
@@ -71,12 +74,15 @@ char *progScanner(char *instr_str){
 }
 
 char *regNumberConverter(char *instr_str){
-char delimiter[] = " $"; 
+  char delimiter[] = " $"; 
   char *converted = (char*)malloc(100*sizeof(char)); 
   char* token; 
-  char temp; 
- 
-  token = strtok(instr_str, delimiter); 
+  
+  token = strtok(instr_str, delimiter);
+  strcat(converted, token);
+  strcat(converted, " ");
+  token = strtok(NULL, delimiter);
+
   while(token != NULL){ 
     if(!strcmp(token, "zero")) strcat(converted, "0"); 
     else if(!strcmp(token, "at")) strcat(converted, "1"); 
@@ -110,7 +116,7 @@ char delimiter[] = " $";
     else if(!strcmp(token, "sp")) strcat(converted, "29"); 
     else if(!strcmp(token, "fp")) strcat(converted, "30"); 
     else if(!strcmp(token, "ra")) strcat(converted, "31");
-    
+    else if(atoi(token) < 0 || atoi(token) > 31) return NULL;
     else strcat(converted, token); 
     strcat(converted, " "); 
     token = strtok(NULL, delimiter); 
@@ -119,8 +125,83 @@ char delimiter[] = " $";
   return converted; 
 }
 
-void parser(char *instr_str){
+struct inst parser(char *instr_str){
+	//No idea why they suggest to use enum here, we're passed character array, not literals.
+	char *token;
+	char *parsed = (char*)malloc(100*sizeof(char));
+	char delimiter[] = " ";
+	int i = 0;
+	int r = 0;
+	int sw_lw = 0;
+	struct inst instruction;
 
+	token = strtok(instr_str, delimiter);
+	if(!strcmp(token, "add")){
+		instruction.opcode = 0;
+		token = strtok(NULL, delimiter);
+		instruction.rd = atoi(token);
+		token = strtok(NULL, delimiter);
+		instruction.rs = atoi(token);
+		token = strtok(NULL, delimiter);
+		instruction.rt = atoi(token);
+	}
+	else if(!strcmp(token, "addi")){
+		instruction.opcode = 1;
+		token = strtok(NULL, delimiter);
+		instruction.rt = atoi(token);
+		token = strtok(NULL, delimiter);
+		instruction.rs = atoi(token);
+		token = strtok(NULL, delimiter);
+		instruction.immediate = atoi(token);		
+	}
+	else if(!strcmp(token, "sub")){
+		instruction.opcode = 2;
+		token = strtok(NULL, delimiter);
+		instruction.rd = atoi(token);
+		token = strtok(NULL, delimiter);
+		instruction.rs = atoi(token);
+		token = strtok(NULL, delimiter);
+		instruction.rt = atoi(token);
+	}
+	else if(!strcmp(token, "mul")){
+		instruction.opcode = 3;
+		token = strtok(NULL, delimiter);
+		instruction.rd = atoi(token);
+		token = strtok(NULL, delimiter);
+		instruction.rs = atoi(token);
+		token = strtok(NULL, delimiter);
+		instruction.rt = atoi(token);
+	}
+	else if(!strcmp(token, "lw")){
+		instruction.opcode = 4;
+		token = strtok(NULL, delimiter);
+		instruction.rt = atoi(token);
+		token = strtok(NULL, delimiter);
+		instruction.offset = atoi(token);
+		token = strtok(NULL, delimiter);
+		instruction.rs = atoi(token);
+	}
+	else if(!strcmp(token, "sw")){
+		instruction.opcode = 5;
+		token = strtok(NULL, delimiter);
+		instruction.rt = atoi(token);
+		token = strtok(NULL, delimiter);
+		instruction.offset = atoi(token);
+		token = strtok(NULL, delimiter);
+		instruction.rs = atoi(token);
+	}
+	else if(!strcmp(token, "beq")){
+		instruction.opcode = 6;
+		token = strtok(NULL, delimiter);
+		instruction.rd = atoi(token);
+		token = strtok(NULL, delimiter);
+		instruction.rs = atoi(token);
+		token = strtok(NULL, delimiter);
+		instruction.rt = atoi(token);
+	}
+	printf("%d %d %d %d %d %d\n", instruction.opcode, instruction.rd, instruction.rs, instruction.rt, instruction.immediate, instruction.offset);
+	return instruction;
+	
 }
 
 void IF(){
@@ -239,9 +320,11 @@ main (int argc, char *argv[]){
 
 	char *instr_str;
 	instr_str = malloc(100*sizeof(char));
-
-	while(fgets(instr_str, 100, input))
+	int inst_cnt = 0;
+	while(fgets(instr_str, 100, input)){
 		parser(regNumberConverter(progScanner(instr_str)));
+		inst_cnt++;
+	}
 	fclose(input);
 	
 
