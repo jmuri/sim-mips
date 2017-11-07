@@ -1,4 +1,4 @@
-// Author: Shikang Xu; ECE 353 TA
+//John Shea, Jeff Muri, Jackson Perkins
 
 // List the full names of ALL group members at the top of your code.
 #include <stdio.h>
@@ -204,48 +204,135 @@ struct inst parser(char *instr_str){
 	
 }
 
-void IF(){
-/*Fetches the instruction struct form memory
-  Checks if valid bit in IF_ID latch is 1
-  Writes istr.opcode into latch.opcode 
-  Writes istr.rd into latch.dest 
-  Writes istr.rs into latch.data1
-  Writes istr.rt into latch.data2
-  Writes istr.imm into latch.data3i
-  Sets valid bit to 0	*/
-  
+void IF(struct inst i){
+/*	Fetches the instruction struct from memory
+  	Checks if valid bit in IF_ID latch is 1
+  	Writes istr.opcode into latch.opcode 
+  	Writes istr.rd into latch.dest 
+  	Writes istr.rs into latch.data1
+  	Writes istr.rt into latch.data2
+  	Writes istr.imm into latch.data3i
+  	Sets valid bit to 0	*/
+	IF_ID.opcode = i.opcode;
+	IF_ID.dest = i.rd;
+	IF_ID.data1 = i.rs;
+	IF_ID.data2 = i.rt;
+	IF_ID.data3 = i.immediate;
 }
 
 void ID(long mips_reg[]){
 /*	Checks if valid bit in IF_ID = 0
 	Writes IF_ID.opcode ID_EX.opcode
+	
 	If add, sub, mul
-	*********************************
 	Writes IF_ID.dest into ID_EX.dest
 	Writes mips_reg[IF_ID.data1] into ID_EX.data1
 	Writes mips_reg[IF_ID.data2] into ID_EX.data2
 
-	Else if addi, lw, sw
-	*********************************
+	If addi, lw, sw
 	Writes IF_ID.data2 into ID_EX.dest
-	Writes iF_ID.data1 into ID_EX.data1
+	Writes mips[IF_ID.data1] into ID_EX.data1
 	Writes IF_ID.data3 into ID_EX.data2
 
-	Else beq...
- */
+	If beq... */
+	ID_EX.opcode = IF_ID.opcode;
+	switch(ID_EX.opcode){
+		case(0):
+		case(1):
+		case(2):
+			ID_EX.dest = IF_ID.dest;
+			ID_EX.data1 = mips_reg[IF_ID.data1];
+			ID_EX.data2 = mips_reg[IF_ID.data2];
+			break;
+		case(3):
+		case(4):
+			ID_EX.dest = IF_ID.data2;
+			ID_EX.data1 = mips_reg[IF_ID.data1];
+			ID_EX.data2 = IF_ID.data3;
+			break;
+		case(5):
+			ID_EX.dest = mips_reg[IF_ID.data2];
+			ID_EX.data1 = mips_reg[IF_ID.data1];
+			ID_EX.data2 = IF_ID.data3;
+		case(6):
+			printf("beq not implemented yet");
+			break;
+	}
 }
 
 void EX(){
-
+/*	Checks for valid bit before writing
+	Writes ID_EX.opcode into EX_MEM.opcode
+	Writes ID_EX.dest into EX_MEM.dest
+	Adds ID_EX.data1 and ID_EX.data2 and puts into EX_MEM.data1*/
+	EX_MEM.opcode = ID_EX.opcode;
+	EX_MEM.dest = ID_EX.dest;
+	EX_MEM.data1 = ID_EX.data1 + ID_EX.data2;
 }
 
 void MEM(){
+/*	Checks for valid bit before writing
+	Writes EX_MEM.opcode into MEM_WB.opcode
+	Writes EX_MEM.dest into MEM_WB.dest
+
+	If add, sub, mul, addi, there is no memory access and takes one cycle
+	Writes EX_MEM.data1 into MEM_WB.data1
+
+	If lw
+	Writes data_mem[EX_MEM.data1] into MEM_WB.data1
+
+	IF sw
+	Writes EX_MEM.dest into data_mem[EX_MEM.data1]
+
+	IF beq..... */
+	MEM_WB.opcode = EX_MEM.opcode;
+	MEM_WB.dest = EX_MEM.dest;
+	switch(MEM_WB.opcode){
+		case(0):
+		case(1):
+		case(2):
+		case(3):
+			MEM_WB.data1 = EX_MEM.data1;
+			break;
+		case(4):
+			MEM_WB.data1 = data_mem[EX_MEM.data1];
+			break;
+		case(5):
+			data_mem[EX_MEM.data1] = EX_MEM.dest;
+			MEM_WB.data1 = EX_MEM.data1;
+			break;
+		case(6):
+			printf("beq not implemented yet");
+			break;
+	}
+
 
 }
 
-void WB(){
+void WB(long mips_reg[]){
+/* 	If add, sub, mult, addi, lw
+	Writes MEM_WB.data1 into mips_reg[MEM_WB.dest]
+
+	If sw
+	Nothing gets written to the registers */
+	if(MEM_WB.opcode!=5){
+		mips_reg[MEM_WB.dest] = MEM_WB.data1;
+	}
 	
 }
+
+void displayLatch(struct latch l){
+	printf("\n");
+	printf("=====\n");
+	printf("%d\n",l.valid);
+	printf("%d\n",l.opcode);
+	printf("%d\n",l.dest);
+	printf("%d\n",l.data1);
+	printf("%d\n",l.data2);
+	printf("%d\n",l.data3);
+	printf("=====\n");
+}
+
 
 
 main (int argc, char *argv[]){
@@ -326,7 +413,67 @@ main (int argc, char *argv[]){
 		inst_cnt++;
 	}
 	fclose(input);
+
+////////JOHN TESTING////////////
+
+	mips_reg[7] = 5;
+	mips_reg[8] =17;
 	
+
+	struct inst test = {0,9,7,8,0};
+	IF(test);
+	displayLatch(IF_ID);
+	ID(mips_reg);
+	displayLatch(ID_EX);
+	EX();
+	displayLatch(EX_MEM);
+	MEM();
+	displayLatch(MEM_WB);
+	WB(mips_reg);
+
+
+	struct inst test2 = {0,15,9,8,0};
+	IF(test2);
+	displayLatch(IF_ID);
+	ID(mips_reg);
+	displayLatch(ID_EX);
+	EX();
+	displayLatch(EX_MEM);
+	MEM();
+	displayLatch(MEM_WB);
+	WB(mips_reg);
+
+
+	struct inst test3 = {3,0,7,1,75};
+	IF(test3);
+	displayLatch(IF_ID);
+	ID(mips_reg);
+	displayLatch(ID_EX);
+	EX();
+	displayLatch(EX_MEM);
+	MEM();
+	displayLatch(MEM_WB);
+	WB(mips_reg);
+
+
+//////JOHN TESTING///////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	/////////////////////////////////////////////////code2.c: The following code will output the register calue to 
 	//screen at every cycle and wait for the ENTER key to be pressed;
@@ -344,14 +491,6 @@ main (int argc, char *argv[]){
 	printf("press ENTER to continue\n");
 	while(getchar() != '\n');
 	//end of code2.c
-
-
-
-
-
-
-
-
 
 	float ifUtil, idUtil, exUtil, memUtil, wbUtil = 0;
 	//Beginning of code3.c, code given to us to be put at the end of main
@@ -373,13 +512,5 @@ main (int argc, char *argv[]){
 	fclose(output);
 	return 0;
 	//End of code3.c
-
-	//Jeff muri likes spicy asian food
-	//Jackson like whaners
-	//start your code from here
-	//balhbalhaskdlfjaslkdfh
-	//No dad what about you!!!
-	//john shea likes boners
-
 
 }
