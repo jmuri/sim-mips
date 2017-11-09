@@ -49,6 +49,9 @@ char *progScanner(char *instr_str){
 	char delimiters[] = " ,()\n";
 	char *scanned = (char*)malloc(100*sizeof(char));
 	char* token;
+	char str2[100];
+	char out[100];
+	memcpy(&str2, instr_str, 100);
 
 	//following loop and if statement checks for mismatched parenthesis
 	int count =0;
@@ -66,11 +69,11 @@ char *progScanner(char *instr_str){
 		exit(1);
 	}
 
-	token = strtok(instr_str, delimiters);
+	token = strtok(&str2, delimiters);
 	
 	while(token != NULL){
-		strcat(scanned, token);
-		strcat(scanned, " ");
+		strcat(out, token);
+		strcat(out, " ");
 		token = strtok(NULL, delimiters);
 	}
 	return scanned;
@@ -149,7 +152,7 @@ struct inst parser(char *instr_str){
 		instruction.rt = atoi(token);
 	}
 	else if(!strcmp(token, "addi")){
-		instruction.opcode = 1;
+		instruction.opcode = 3;
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
 		token = strtok(NULL, delimiter);
@@ -158,7 +161,7 @@ struct inst parser(char *instr_str){
 		instruction.immediate = atoi(token);		
 	}
 	else if(!strcmp(token, "sub")){
-		instruction.opcode = 2;
+		instruction.opcode = 1;
 		token = strtok(NULL, delimiter);
 		instruction.rd = atoi(token);
 		token = strtok(NULL, delimiter);
@@ -167,7 +170,7 @@ struct inst parser(char *instr_str){
 		instruction.rt = atoi(token);
 	}
 	else if(!strcmp(token, "mul")){
-		instruction.opcode = 3;
+		instruction.opcode = 2;
 		token = strtok(NULL, delimiter);
 		instruction.rd = atoi(token);
 		token = strtok(NULL, delimiter);
