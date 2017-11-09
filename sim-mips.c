@@ -69,11 +69,11 @@ char *progScanner(char *instr_str){
 		exit(1);
 	}
 
-	token = strtok(&str2, delimiters);
+	token = strtok(str2, delimiters);
 	
 	while(token != NULL){
-		strcat(out, token);
-		strcat(out, " ");
+		strcat(scanned, token);
+		strcat(scanned, " ");
 		token = strtok(NULL, delimiters);
 	}
 	return scanned;
