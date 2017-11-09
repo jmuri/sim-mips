@@ -41,6 +41,8 @@ struct latch MEM_WB = {0};
 //initialize instruction memory and data memory
 int32_t data_mem[512];
 struct inst inst_mem[512];
+int nopCounter = 0;
+int testpc = 0;
 
 
 char *progScanner(char *instr_str){
@@ -50,7 +52,8 @@ char *progScanner(char *instr_str){
 
 	//following loop and if statement checks for mismatched parenthesis
 	int count =0;
-	for(int i=0; i<strlen(instr_str); i++){
+	int i;
+	for(i=0; i<strlen(instr_str); i++){
 		if (instr_str[i] == '(') count++;
 		else if(instr_str[i] == ')') count--;
 		if (count<0){ 
@@ -204,25 +207,35 @@ struct inst parser(char *instr_str){
 	
 }
 
-void IF(struct inst i){
+void IF(struct inst inst_mem[]){
 /*	Fetches the instruction struct from memory
-  	Checks if valid bit in IF_ID latch is 1
   	Writes istr.opcode into latch.opcode 
   	Writes istr.rd into latch.dest 
   	Writes istr.rs into latch.data1
   	Writes istr.rt into latch.data2
   	Writes istr.imm into latch.data3i
   	Sets valid bit to 0	*/
-	IF_ID.opcode = i.opcode;
-	IF_ID.dest = i.rd;
-	IF_ID.data1 = i.rs;
-	IF_ID.data2 = i.rt;
-	IF_ID.data3 = i.immediate;
+  	struct inst i = inst_mem[testpc];
+  	if(nopCounter==0){
+		IF_ID.opcode = i.opcode;
+		IF_ID.dest = i.rd;
+		IF_ID.data1 = i.rs;
+		IF_ID.data2 = i.rt;
+		IF_ID.data3 = i.immediate;
+		testpc++; 
+	}
+	else{
+		IF_ID.opcode = 0;
+		IF_ID.dest = 0;
+		IF_ID.data1 = 0;
+		IF_ID.data2 = 0;
+		IF_ID.data3 = 0;
+		nopCounter--;
+	}
 }
 
 void ID(long mips_reg[]){
-/*	Checks if valid bit in IF_ID = 0
-	Writes IF_ID.opcode ID_EX.opcode
+/*	Writes IF_ID.opcode ID_EX.opcode
 	
 	If add, sub, mul
 	Writes IF_ID.dest into ID_EX.dest
@@ -235,44 +248,85 @@ void ID(long mips_reg[]){
 	Writes IF_ID.data3 into ID_EX.data2
 
 	If beq... */
+
+	/*To check for raw hazards, check that EX_MEM.dest != ID source reg,
+	then enter two nops. If MEM_WB!= ID source reg, enter 1 nop*/
 	ID_EX.opcode = IF_ID.opcode;
-	switch(ID_EX.opcode){
-		case(0):
-		case(1):
-		case(2):
-			ID_EX.dest = IF_ID.dest;
-			ID_EX.data1 = mips_reg[IF_ID.data1];
-			ID_EX.data2 = mips_reg[IF_ID.data2];
-			break;
-		case(3):
-		case(4):
-			ID_EX.dest = IF_ID.data2;
-			ID_EX.data1 = mips_reg[IF_ID.data1];
-			ID_EX.data2 = IF_ID.data3;
-			break;
-		case(5):
-			ID_EX.dest = mips_reg[IF_ID.data2];
-			ID_EX.data1 = mips_reg[IF_ID.data1];
-			ID_EX.data2 = IF_ID.data3;
-		case(6):
-			printf("beq not implemented yet");
-			break;
+	//Check to see if RAW hazard exists at EX_MEM
+	if(((IF_ID.data1==EX_MEM.dest)|(IF_ID.data2==EX_MEM.dest))&&(EX_MEM.dest>0)){
+		nopCounter++;
+		ID_EX.opcode = 0;
+		ID_EX.dest = 0;
+		ID_EX.data1 = 0;
+		ID_EX.data2 = 0;
+		ID_EX.data3 = 0;
+		testpc--;
+	}
+	//Check to see if RAW hazard exists at MEM_WB
+	else if(((IF_ID.data1==MEM_WB.dest)|(IF_ID.data2==MEM_WB.dest))&&(MEM_WB.dest>0)){
+		ID_EX.opcode = 0;
+		ID_EX.dest = 0;
+		ID_EX.data1 = 0;
+		ID_EX.data2 = 0;
+		ID_EX.data3 = 0;
+	}
+	//If no RAW hazards, continue through
+	else{
+		switch(ID_EX.opcode){
+			case(0):
+			case(1):
+			case(2):
+				ID_EX.dest = IF_ID.dest;
+				ID_EX.data1 = mips_reg[IF_ID.data1];
+				ID_EX.data2 = mips_reg[IF_ID.data2];
+				break;
+			case(3):
+			case(4):
+				ID_EX.dest = IF_ID.data2;
+				ID_EX.data1 = mips_reg[IF_ID.data1];
+				ID_EX.data2 = IF_ID.data3;
+				break;
+			case(5):
+				ID_EX.dest = mips_reg[IF_ID.data2];
+				ID_EX.data1 = mips_reg[IF_ID.data1];
+				ID_EX.data2 = IF_ID.data3;
+			case(6):
+				printf("beq not implemented yet");
+				break;		
+		}
 	}
 }
 
 void EX(){
-/*	Checks for valid bit before writing
-	Writes ID_EX.opcode into EX_MEM.opcode
+/*	Writes ID_EX.opcode into EX_MEM.opcode
 	Writes ID_EX.dest into EX_MEM.dest
-	Adds ID_EX.data1 and ID_EX.data2 and puts into EX_MEM.data1*/
+	Operates on ID_EX.data1 and ID_EX.data2 and puts into EX_MEM.data1
+	depending on opcode */
 	EX_MEM.opcode = ID_EX.opcode;
 	EX_MEM.dest = ID_EX.dest;
-	EX_MEM.data1 = ID_EX.data1 + ID_EX.data2;
+	switch(EX_MEM.opcode){
+		case(0):
+			EX_MEM.data1 = ID_EX.data1+ID_EX.data2;
+			break;
+		case(1):
+			EX_MEM.data1 = ID_EX.data1-ID_EX.data2;
+			break;
+		case(2):
+			EX_MEM.data1 = ID_EX.data1*ID_EX.data2;
+			break;
+		case(3):
+		case(4):
+		case(5):
+			EX_MEM.data1 = ID_EX.data1+ID_EX.data2;
+			break;
+		case(6):
+			printf("beq not implemented yet");
+			break;
+	}	
 }
 
 void MEM(){
-/*	Checks for valid bit before writing
-	Writes EX_MEM.opcode into MEM_WB.opcode
+/*	Writes EX_MEM.opcode into MEM_WB.opcode
 	Writes EX_MEM.dest into MEM_WB.dest
 
 	If add, sub, mul, addi, there is no memory access and takes one cycle
@@ -418,42 +472,32 @@ main (int argc, char *argv[]){
 
 	mips_reg[7] = 5;
 	mips_reg[8] =17;
-	
-
-	struct inst test = {0,9,7,8,0};
-	IF(test);
-	displayLatch(IF_ID);
-	ID(mips_reg);
-	displayLatch(ID_EX);
-	EX();
-	displayLatch(EX_MEM);
-	MEM();
-	displayLatch(MEM_WB);
-	WB(mips_reg);
-
-
-	struct inst test2 = {0,15,9,8,0};
-	IF(test2);
-	displayLatch(IF_ID);
-	ID(mips_reg);
-	displayLatch(ID_EX);
-	EX();
-	displayLatch(EX_MEM);
-	MEM();
-	displayLatch(MEM_WB);
-	WB(mips_reg);
-
-
-	struct inst test3 = {3,0,7,1,75};
-	IF(test3);
-	displayLatch(IF_ID);
-	ID(mips_reg);
-	displayLatch(ID_EX);
-	EX();
-	displayLatch(EX_MEM);
-	MEM();
-	displayLatch(MEM_WB);
-	WB(mips_reg);
+	data_mem[22] = 100;
+	struct inst tests[20];
+	tests[0] = (struct inst){0,9,7,8,0};
+	tests[1] = (struct inst){0,10,9,7,0};
+	tests[2] = (struct inst){0,11,10,7,0};
+	int k=0;
+	while(k<15){
+		printf("PC%d\n",testpc);
+		WB(mips_reg);
+		MEM();
+		EX();
+		ID(mips_reg);
+		IF(tests);
+		printf("=================================");
+		printf("IF");
+		displayLatch(IF_ID);
+		printf("ID");
+		displayLatch(ID_EX);
+		printf("EX");
+		displayLatch(EX_MEM);
+		printf("MEM");
+		displayLatch(MEM_WB);	
+		printf("WB\n");
+		printf("=================================");
+		k++;
+	}
 
 
 //////JOHN TESTING///////////
