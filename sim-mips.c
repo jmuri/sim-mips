@@ -44,14 +44,19 @@ struct inst inst_mem[512];
 int nopCounter = 0;
 int testpc = 0;
 
+char *mycat(char *cur, char *next){
+	char *string = malloc(strlen(cur) + strlen(next) + 1);
+	char *res = string;
+	for (; *cur ; *string++ = *cur++);
+	for (; *next ; *string++ = *next++);
+	//*string = '\0';
+	return res;  
+}
 
 char *progScanner(char *instr_str){
 	char delimiters[] = " ,()\n";
 	char *scanned = (char*)malloc(100*sizeof(char));
 	char* token;
-	char str2[100];
-	char out[100];
-	memcpy(&str2, instr_str, 100);
 
 	//following loop and if statement checks for mismatched parenthesis
 	int count =0;
@@ -69,13 +74,14 @@ char *progScanner(char *instr_str){
 		exit(1);
 	}
 
-	token = strtok(str2, delimiters);
-	
+	token = strtok(instr_str, delimiters);
+	//builds instruction without parenthesis or commas
 	while(token != NULL){
-		strcat(scanned, token);
-		strcat(scanned, " ");
+		scanned = mycat(scanned, token);
+		scanned = mycat(scanned, " ");
 		token = strtok(NULL, delimiters);
 	}
+	//printf("%s\n", scanned);
 	return scanned;
 }
 
@@ -85,46 +91,46 @@ char *regNumberConverter(char *instr_str){
   char* token; 
   
   token = strtok(instr_str, delimiter);
-  strcat(converted, token);
-  strcat(converted, " ");
+  converted = mycat(converted, token);
+  converted = mycat(converted, " ");
   token = strtok(NULL, delimiter);
 
   while(token != NULL){ 
-    if(!strcmp(token, "zero")) strcat(converted, "0"); 
-    else if(!strcmp(token, "at")) strcat(converted, "1"); 
-    else if(!strcmp(token, "v0")) strcat(converted, "2"); 
-    else if(!strcmp(token, "v1")) strcat(converted, "3"); 
-    else if(!strcmp(token, "a0")) strcat(converted, "4"); 
-    else if(!strcmp(token, "a1")) strcat(converted, "5"); 
-    else if(!strcmp(token, "a2")) strcat(converted, "6"); 
-    else if(!strcmp(token, "a3")) strcat(converted, "7"); 
-    else if(!strcmp(token, "t0")) strcat(converted, "8"); 
-    else if(!strcmp(token, "t1")) strcat(converted, "9"); 
-    else if(!strcmp(token, "t2")) strcat(converted, "10"); 
-    else if(!strcmp(token, "t3")) strcat(converted, "11"); 
-    else if(!strcmp(token, "t4")) strcat(converted, "12"); 
-    else if(!strcmp(token, "t5")) strcat(converted, "13"); 
-    else if(!strcmp(token, "t6")) strcat(converted, "14"); 
-    else if(!strcmp(token, "t7")) strcat(converted, "15"); 
-    else if(!strcmp(token, "s0")) strcat(converted, "16"); 
-    else if(!strcmp(token, "s1")) strcat(converted, "17"); 
-    else if(!strcmp(token, "s2")) strcat(converted, "18"); 
-    else if(!strcmp(token, "s3")) strcat(converted, "19"); 
-    else if(!strcmp(token, "s4")) strcat(converted, "20"); 
-    else if(!strcmp(token, "s5")) strcat(converted, "21"); 
-    else if(!strcmp(token, "s6")) strcat(converted, "22"); 
-    else if(!strcmp(token, "s7")) strcat(converted, "23"); 
-    else if(!strcmp(token, "t8")) strcat(converted, "24"); 
-    else if(!strcmp(token, "t9")) strcat(converted, "25"); 
-    else if(!strcmp(token, "k0")) strcat(converted, "26"); 
-    else if(!strcmp(token, "k1")) strcat(converted, "27"); 
-    else if(!strcmp(token, "gp")) strcat(converted, "28");
-    else if(!strcmp(token, "sp")) strcat(converted, "29"); 
-    else if(!strcmp(token, "fp")) strcat(converted, "30"); 
-    else if(!strcmp(token, "ra")) strcat(converted, "31");
-    else if(atoi(token) < 0 || atoi(token) > 31) return NULL;
-    else strcat(converted, token); 
-    strcat(converted, " "); 
+    if(!strcmp(token, "zero")) converted = mycat(converted, "0"); 
+    else if(!strcmp(token, "at")) converted = mycat(converted, "1"); 
+    else if(!strcmp(token, "v0")) converted = mycat(converted, "2"); 
+    else if(!strcmp(token, "v1")) converted = mycat(converted, "3"); 
+    else if(!strcmp(token, "a0")) converted = mycat(converted, "4"); 
+    else if(!strcmp(token, "a1")) converted = mycat(converted, "5"); 
+    else if(!strcmp(token, "a2")) converted = mycat(converted, "6"); 
+    else if(!strcmp(token, "a3")) converted = mycat(converted, "7"); 
+    else if(!strcmp(token, "t0")) converted = mycat(converted, "8"); 
+    else if(!strcmp(token, "t1")) converted = mycat(converted, "9"); 
+    else if(!strcmp(token, "t2")) converted = mycat(converted, "10"); 
+    else if(!strcmp(token, "t3")) converted = mycat(converted, "11"); 
+    else if(!strcmp(token, "t4")) converted = mycat(converted, "12"); 
+    else if(!strcmp(token, "t5")) converted = mycat(converted, "13"); 
+    else if(!strcmp(token, "t6")) converted = mycat(converted, "14"); 
+    else if(!strcmp(token, "t7")) converted = mycat(converted, "15"); 
+    else if(!strcmp(token, "s0")) converted = mycat(converted, "16"); 
+    else if(!strcmp(token, "s1")) converted = mycat(converted, "17"); 
+    else if(!strcmp(token, "s2")) converted = mycat(converted, "18"); 
+    else if(!strcmp(token, "s3")) converted = mycat(converted, "19"); 
+    else if(!strcmp(token, "s4")) converted = mycat(converted, "20"); 
+    else if(!strcmp(token, "s5")) converted = mycat(converted, "21"); 
+    else if(!strcmp(token, "s6")) converted = mycat(converted, "22"); 
+    else if(!strcmp(token, "s7")) converted = mycat(converted, "23"); 
+    else if(!strcmp(token, "t8")) converted = mycat(converted, "24"); 
+    else if(!strcmp(token, "t9")) converted = mycat(converted, "25"); 
+    else if(!strcmp(token, "k0")) converted = mycat(converted, "26"); 
+    else if(!strcmp(token, "k1")) converted = mycat(converted, "27"); 
+    else if(!strcmp(token, "gp")) converted = mycat(converted, "28");
+    else if(!strcmp(token, "sp")) converted = mycat(converted, "29"); 
+    else if(!strcmp(token, "fp")) converted = mycat(converted, "30"); 
+    else if(!strcmp(token, "ra")) converted = mycat(converted, "31");
+    else if(!(atoi(token) >= 0 && atoi(token) <= 31)) return NULL;
+    else converted = mycat(converted, token); 
+    converted = mycat(converted, " "); 
     token = strtok(NULL, delimiter); 
   } 
   printf("%s\n", converted); 
@@ -135,7 +141,7 @@ struct inst parser(char *instr_str){
 	//No idea why they suggest to use enum here, we're passed character array, not literals.
 	char *token;
 	char *parsed = (char*)malloc(100*sizeof(char));
-	char delimiter[] = " ";
+	char delimiter[] = " \n";
 	int i = 0;
 	int r = 0;
 	int sw_lw = 0;
@@ -150,6 +156,8 @@ struct inst parser(char *instr_str){
 		instruction.rs = atoi(token);
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
+		instruction.immediate = NULL;
+		instruction.offset = NULL;
 	}
 	else if(!strcmp(token, "addi")){
 		instruction.opcode = 3;
@@ -158,7 +166,9 @@ struct inst parser(char *instr_str){
 		token = strtok(NULL, delimiter);
 		instruction.rs = atoi(token);
 		token = strtok(NULL, delimiter);
-		instruction.immediate = atoi(token);		
+		instruction.immediate = atoi(token);
+		instruction.rd = NULL;
+		instruction.offset = NULL;		
 	}
 	else if(!strcmp(token, "sub")){
 		instruction.opcode = 1;
@@ -168,6 +178,8 @@ struct inst parser(char *instr_str){
 		instruction.rs = atoi(token);
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
+		instruction.immediate = NULL;
+		instruction.offset = NULL;
 	}
 	else if(!strcmp(token, "mul")){
 		instruction.opcode = 2;
@@ -177,6 +189,8 @@ struct inst parser(char *instr_str){
 		instruction.rs = atoi(token);
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
+		instruction.immediate = NULL;
+		instruction.offset = NULL;
 	}
 	else if(!strcmp(token, "lw")){
 		instruction.opcode = 4;
@@ -186,6 +200,8 @@ struct inst parser(char *instr_str){
 		instruction.offset = atoi(token);
 		token = strtok(NULL, delimiter);
 		instruction.rs = atoi(token);
+		instruction.rd = NULL;
+		instruction.immediate = NULL;
 	}
 	else if(!strcmp(token, "sw")){
 		instruction.opcode = 5;
@@ -195,6 +211,8 @@ struct inst parser(char *instr_str){
 		instruction.offset = atoi(token);
 		token = strtok(NULL, delimiter);
 		instruction.rs = atoi(token);
+		instruction.rd = NULL;
+		instruction.immediate = NULL;
 	}
 	else if(!strcmp(token, "beq")){
 		instruction.opcode = 6;
@@ -204,6 +222,8 @@ struct inst parser(char *instr_str){
 		instruction.rs = atoi(token);
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
+		instruction.immediate = NULL;
+		instruction.offset = NULL;
 	}
 	printf("%d %d %d %d %d %d\n", instruction.opcode, instruction.rd, instruction.rs, instruction.rt, instruction.immediate, instruction.offset);
 	return instruction;
