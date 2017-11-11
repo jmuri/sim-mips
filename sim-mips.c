@@ -246,6 +246,9 @@ struct inst parser(char *instr_str){
 		instruction.rs = 0;
 		instruction.rt = 0;
 		instruction.immediate = 0;
+	}else{
+		printf("error: invalid opcode\n");
+		exit(0);
 	}
 	//printf("%d %d %d %d %d %d\n", instruction.opcode, instruction.rd, instruction.rs, instruction.rt, instruction.immediate, instruction.offset);
 	return instruction;
@@ -501,7 +504,7 @@ void displayLatch(struct latch l){
 
 
 
-main (int argc, char *argv[]){
+int main (int argc, char *argv[]){
 	//Beginning of code1.c
 	int sim_mode=0;//mode flag, 1 for single-cycle, 0 for batch
 	int c,m,n;
@@ -586,15 +589,61 @@ main (int argc, char *argv[]){
 		parsed_instruction = parser(valid);
 		if(parsed_instruction.immediate==-1){
 			printf("error: instruction %i contains an invalid offset value\n", inst_cnt);
+			return 0;
 		}
 		inst_mem[inst_cnt] = parsed_instruction;
-		printf("%i %i %i %i %i\n", inst_mem[inst_cnt].opcode, inst_mem[inst_cnt].rd, inst_mem[inst_cnt].rs, inst_mem[inst_cnt].rt, inst_mem[inst_cnt].immediate);
+		printf("op: %i rd: %i rs: %i rt: %i imm: %i\n", inst_mem[inst_cnt].opcode, inst_mem[inst_cnt].rd, inst_mem[inst_cnt].rs, inst_mem[inst_cnt].rt, inst_mem[inst_cnt].immediate);
 		inst_cnt++;
 	}
 	fclose(input);
 
-////////JOHN TESTING////////////
 
+
+
+
+
+
+
+
+////////Jackson Testing/////////
+	int hey = 0;
+	//Main loop will be while the command is not haltSimulation
+	//Will then run out rest of pipeline then stop simulation?
+	while(inst_mem[hey].opcode>=0){
+	//should printout commands and stop when command is haltSimulation			
+		//printf("op: %i rd: %i rs: %i rt: %i imm: %i\n", inst_mem[hey].opcode, inst_mem[hey].rd, inst_mem[hey].rs, inst_mem[hey].rt, inst_mem[hey].immediate);
+		WB(mips_reg);	
+		MEM();
+		EX();
+		ID(mips_reg);
+		IF(inst_mem);
+
+
+		hey++;
+	}
+//	printf("$t0 = %d\n", (int)mips_reg[8]);
+//	printf("$t1 = %d\n", (int)mips_reg[9]);
+//	printf("$t2 = %d\n", (int)mips_reg[10]);
+//	printf("$t3 = %d\n", (int)mips_reg[11]);
+//	printf("$t4 = %d\n", (int)mips_reg[12]);
+//	printf("$t5 = %d\n", (int)mips_reg[13]);
+//	printf("$t6 = %d\n", (int)mips_reg[14]);
+
+
+////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+////////JOHN TESTING////////////
+/*
 	mips_reg[7] = 5;
 	mips_reg[8] =17;
 	data_mem[22] = 100;
@@ -637,7 +686,7 @@ main (int argc, char *argv[]){
 		printf("\n");
 		k++;
 	}
-
+*/
 //////JOHN TESTING///////////
 
 
