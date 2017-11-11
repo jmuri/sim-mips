@@ -27,10 +27,9 @@ struct inst{
 	int rs;
 	int rt;
 	int immediate;
-	int offset;
 };
 
-enum opcodes{add, addi, sub, mul, lw, sw, beq};
+
 
 //Global Variables
 //Initialize Latches
@@ -133,7 +132,7 @@ char *regNumberConverter(char *instr_str){
     converted = mycat(converted, " "); 
     token = strtok(NULL, delimiter); 
   } 
-  printf("%s\n", converted); 
+  //printf("%s\n", converted); 
   return converted; 
 }
 
@@ -156,8 +155,7 @@ struct inst parser(char *instr_str){
 		instruction.rs = atoi(token);
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
-		instruction.immediate = NULL;
-		instruction.offset = NULL;
+		instruction.immediate = 0;
 	}
 	else if(!strcmp(token, "addi")){
 		instruction.opcode = 3;
@@ -167,8 +165,7 @@ struct inst parser(char *instr_str){
 		instruction.rs = atoi(token);
 		token = strtok(NULL, delimiter);
 		instruction.immediate = atoi(token);
-		instruction.rd = NULL;
-		instruction.offset = NULL;		
+		instruction.rd = 0;	
 	}
 	else if(!strcmp(token, "sub")){
 		instruction.opcode = 1;
@@ -178,8 +175,7 @@ struct inst parser(char *instr_str){
 		instruction.rs = atoi(token);
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
-		instruction.immediate = NULL;
-		instruction.offset = NULL;
+		instruction.immediate = 0;
 	}
 	else if(!strcmp(token, "mul")){
 		instruction.opcode = 2;
@@ -189,30 +185,35 @@ struct inst parser(char *instr_str){
 		instruction.rs = atoi(token);
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
-		instruction.immediate = NULL;
-		instruction.offset = NULL;
+		instruction.immediate = 0;
 	}
 	else if(!strcmp(token, "lw")){
 		instruction.opcode = 4;
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
 		token = strtok(NULL, delimiter);
-		instruction.offset = atoi(token);
+		if(atoi(token)%4!=0){
+			instruction.immediate = -1;
+			return instruction;
+		}
+		instruction.immediate = atoi(token);
 		token = strtok(NULL, delimiter);
 		instruction.rs = atoi(token);
-		instruction.rd = NULL;
-		instruction.immediate = NULL;
+		instruction.rd = 0;
 	}
 	else if(!strcmp(token, "sw")){
 		instruction.opcode = 5;
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
 		token = strtok(NULL, delimiter);
-		instruction.offset = atoi(token);
+		if(atoi(token)%4!=0){
+			instruction.immediate = -1;
+			return instruction;
+		}
+		instruction.immediate = atoi(token);
 		token = strtok(NULL, delimiter);
 		instruction.rs = atoi(token);
-		instruction.rd = NULL;
-		instruction.immediate = NULL;
+		instruction.rd = 0;
 	}
 	else if(!strcmp(token, "beq")){
 		instruction.opcode = 6;
@@ -222,10 +223,9 @@ struct inst parser(char *instr_str){
 		instruction.rs = atoi(token);
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
-		instruction.immediate = NULL;
-		instruction.offset = NULL;
+		instruction.immediate = 0;
 	}
-	printf("%d %d %d %d %d %d\n", instruction.opcode, instruction.rd, instruction.rs, instruction.rt, instruction.immediate, instruction.offset);
+	//printf("%d %d %d %d %d %d\n", instruction.opcode, instruction.rd, instruction.rs, instruction.rt, instruction.immediate, instruction.offset);
 	return instruction;
 	
 }
@@ -487,17 +487,29 @@ main (int argc, char *argv[]){
 	/////////////////////////////////////////////////End of code1.c
 
 	//Start your code here
-/*
+
 	char *instr_str;
+	char *valid;
+	struct inst parsed_instruction;
 	instr_str = malloc(100*sizeof(char));
 	int inst_cnt = 0;
 	while(fgets(instr_str, 100, input)){
-		parser(regNumberConverter(progScanner(instr_str)));
+		valid = regNumberConverter(progScanner(instr_str));
+		if(valid==NULL){
+			printf("error: instruction %i contains an invalid register\n", inst_cnt);
+			return;
+		}
+		parsed_instruction = parser(valid);
+		if(parsed_instruction.immediate==-1){
+			printf("error: instruction %i contains an invalid offset value\n", inst_cnt);
+		}
+		inst_mem[inst_cnt] = parsed_instruction;
+		printf("%i %i %i %i %i\n", inst_mem[inst_cnt].opcode, inst_mem[inst_cnt].rd, inst_mem[inst_cnt].rs, inst_mem[inst_cnt].rt, inst_mem[inst_cnt].immediate);
 		inst_cnt++;
 	}
 	fclose(input);
 
-*/
+
 ////////JOHN TESTING////////////
 
 	mips_reg[7] = 5;
