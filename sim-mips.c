@@ -225,6 +225,13 @@ struct inst parser(char *instr_str){
 		instruction.rt = atoi(token);
 		instruction.immediate = 0;
 	}
+	else if(!strcmp(token, "haltSimulation")){
+		instruction.opcode = -1;
+		instruction.rd = 0;
+		instruction.rs = 0;
+		instruction.rt = 0;
+		instruction.immediate = 0;
+	}
 	//printf("%d %d %d %d %d %d\n", instruction.opcode, instruction.rd, instruction.rs, instruction.rt, instruction.immediate, instruction.offset);
 	return instruction;
 	
