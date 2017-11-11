@@ -237,6 +237,10 @@ struct inst parser(char *instr_str){
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
 		token = strtok(NULL, delimiter);
+		if(atoi(token)%4!=0){
+			instruction.immediate = -1;
+			return instruction;
+		}
 		instruction.immediate = atoi(token);
 		instruction.rd = 0;
 	}
@@ -708,11 +712,11 @@ int main (int argc, char *argv[]){
 
 
 //////////////////code3.c
-	float ifUtil, idUtil, exUtil, memUtil, wbUtil = 0;
+//	float ifUtil, idUtil, exUtil, memUtil, wbUtil = 0;
 	//Beginning of code3.c, code given to us to be put at the end of main
 	if(sim_mode==0){
 		fprintf(output,"program name: %s\n",argv[5]);
-		fprintf(output,"stage utilization: %f  %f  %f  %f  %f \n", ifUtil, idUtil, exUtil, memUtil, wbUtil);
+//		fprintf(output,"stage utilization: %f  %f  %f  %f  %f \n", ifUtil, idUtil, exUtil, memUtil, wbUtil);
                      // add the (double) stage_counter/sim_cycle for each 
                      // stage following sequence IF ID EX MEM WB
 		
