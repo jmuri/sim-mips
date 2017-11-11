@@ -88,13 +88,19 @@ char *regNumberConverter(char *instr_str){
   char delimiter[] = " $"; 
   char *converted = (char*)malloc(100*sizeof(char)); 
   char* token; 
-  
+  int token_cnt = 0;
+  int sw_lw = 0;
+  int addi_beq = 0;
   token = strtok(instr_str, delimiter);
+  if(!strcmp(token, "lw") || !strcmp(token, "sw")) sw_lw = 1;
+  if(!strcmp(token, "addi") || !strcmp(token, "beq")) addi_beq = 1;
   converted = mycat(converted, token);
   converted = mycat(converted, " ");
   token = strtok(NULL, delimiter);
 
-  while(token != NULL){ 
+  while(token != NULL){
+  	if(!strcmp(token, "lw") || !strcmp(token, "sw")) sw_lw = 1;
+  	if(!strcmp(token, "addi") || !strcmp(token, "beq")) addi_beq = 1;
     if(!strcmp(token, "zero")) converted = mycat(converted, "0"); 
     else if(!strcmp(token, "at")) converted = mycat(converted, "1"); 
     else if(!strcmp(token, "v0")) converted = mycat(converted, "2"); 
@@ -127,10 +133,14 @@ char *regNumberConverter(char *instr_str){
     else if(!strcmp(token, "sp")) converted = mycat(converted, "29"); 
     else if(!strcmp(token, "fp")) converted = mycat(converted, "30"); 
     else if(!strcmp(token, "ra")) converted = mycat(converted, "31");
-    else if(!(atoi(token) >= 0 && atoi(token) <= 31)) return NULL;
+    //following statements check for invalid register values
+    else if(!(atoi(token) >= 0 && atoi(token) <= 31) && (token_cnt != 2) && (addi_beq==1)) return NULL;
+    else if(!(atoi(token) >= 0 && atoi(token) <= 31) && (token_cnt != 1) && (sw_lw==1)) return NULL;
+    else if(!(atoi(token) >= 0 && atoi(token) <= 31) && (sw_lw == 0) && (addi_beq == 0)) return NULL;
     else converted = mycat(converted, token); 
     converted = mycat(converted, " "); 
-    token = strtok(NULL, delimiter); 
+    token = strtok(NULL, delimiter);
+    token_cnt++; 
   } 
   //printf("%s\n", converted); 
   return converted; 
@@ -218,12 +228,12 @@ struct inst parser(char *instr_str){
 	else if(!strcmp(token, "beq")){
 		instruction.opcode = 6;
 		token = strtok(NULL, delimiter);
-		instruction.rd = atoi(token);
-		token = strtok(NULL, delimiter);
 		instruction.rs = atoi(token);
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
-		instruction.immediate = 0;
+		token = strtok(NULL, delimiter);
+		instruction.immediate = atoi(token);
+		instruction.rd = 0;
 	}
 	else if(!strcmp(token, "haltSimulation")){
 		instruction.opcode = -1;
@@ -540,7 +550,7 @@ main (int argc, char *argv[]){
 		MEM();
 		EX();
 		ID(mips_reg);
-		IF(tests);
+		IF(inst_mem);
 		printf("=================================");
 		printf("IF");
 		displayLatch(IF_ID);
