@@ -581,7 +581,7 @@ main (int argc, char *argv[]){
 		valid = regNumberConverter(progScanner(instr_str));
 		if(valid==NULL){
 			printf("error: instruction %i contains an invalid register\n", inst_cnt);
-			return;
+			return 0;
 		}
 		parsed_instruction = parser(valid);
 		if(parsed_instruction.immediate==-1){
