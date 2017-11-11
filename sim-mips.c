@@ -592,45 +592,15 @@ int main (int argc, char *argv[]){
 			return 0;
 		}
 		inst_mem[inst_cnt] = parsed_instruction;
-		printf("op: %i rd: %i rs: %i rt: %i imm: %i\n", inst_mem[inst_cnt].opcode, inst_mem[inst_cnt].rd, inst_mem[inst_cnt].rs, inst_mem[inst_cnt].rt, inst_mem[inst_cnt].immediate);
+//		printf("op: %i rd: %i rs: %i rt: %i imm: %i\n", inst_mem[inst_cnt].opcode, inst_mem[inst_cnt].rd, inst_mem[inst_cnt].rs, inst_mem[inst_cnt].rt, inst_mem[inst_cnt].immediate);
 		inst_cnt++;
 	}
-	fclose(input);
 
 
 
 
 
 
-
-
-
-////////Jackson Testing/////////
-	int hey = 0;
-	//Main loop will be while the command is not haltSimulation
-	//Will then run out rest of pipeline then stop simulation?
-	while(inst_mem[hey].opcode>=0){
-	//should printout commands and stop when command is haltSimulation			
-		//printf("op: %i rd: %i rs: %i rt: %i imm: %i\n", inst_mem[hey].opcode, inst_mem[hey].rd, inst_mem[hey].rs, inst_mem[hey].rt, inst_mem[hey].immediate);
-		WB(mips_reg);	
-		MEM();
-		EX();
-		ID(mips_reg);
-		IF(inst_mem);
-
-
-		hey++;
-	}
-//	printf("$t0 = %d\n", (int)mips_reg[8]);
-//	printf("$t1 = %d\n", (int)mips_reg[9]);
-//	printf("$t2 = %d\n", (int)mips_reg[10]);
-//	printf("$t3 = %d\n", (int)mips_reg[11]);
-//	printf("$t4 = %d\n", (int)mips_reg[12]);
-//	printf("$t5 = %d\n", (int)mips_reg[13]);
-//	printf("$t6 = %d\n", (int)mips_reg[14]);
-
-
-////////////////////////////////
 
 
 
@@ -702,27 +672,42 @@ int main (int argc, char *argv[]){
 
 
 
-
-
-
-
-	/////////////////////////////////////////////////code2.c: The following code will output the register calue to 
-	//screen at every cycle and wait for the ENTER key to be pressed;
-	//this will make it proceed to the next cycle
-	printf("cycle: %d ",sim_cycle);
-	if(sim_mode==1){
-		for(i=1;i<REG_NUM;i++){
-			printf("%d  ",mips_reg[i]);
+////////Jackson Testing/////////
+	//Main loop will be while the command is not haltSimulation
+	//Will then run out rest of pipeline then stop simulation?
+	while(1){
+		//run through pipeline
+		WB(&WB_counter, mips_reg);
+		MEM(&MEM_counter);
+		EX(&EX_counter);
+		ID(&ID_counter, mips_reg);
+		IF(&IF_counter, inst_mem);
+		/////////////////////////////////////////////////code2.c: The following code will output the register calue to 
+		//screen at every cycle and wait for the ENTER key to be pressed;
+		//this will make it proceed to the next cycle
+		printf("cycle: %d ",sim_cycle);
+		if(sim_mode==1){
+			for(i=1;i<REG_NUM;i++){
+				printf("%d  ",mips_reg[i]);
+			}
 		}
+		printf("%d\n",pgm_c);
+		pgm_c+=4;
+		sim_cycle+=1;
+		test_counter++;
+		if(sim_mode==1){
+			printf("press ENTER to continue\n");
+			while(getchar() != '\n');
+		}
+		//end of code2.c
+		if(MEM_WB.opcode<0){break;}
 	}
-	printf("%d\n",pgm_c);
-	pgm_c+=4;
-	sim_cycle+=1;
-	test_counter++;
-	printf("press ENTER to continue\n");
-	while(getchar() != '\n');
-	//end of code2.c
 
+
+
+
+
+//////////////////code3.c
 	float ifUtil, idUtil, exUtil, memUtil, wbUtil = 0;
 	//Beginning of code3.c, code given to us to be put at the end of main
 	if(sim_mode==0){
