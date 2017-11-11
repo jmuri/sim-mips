@@ -44,9 +44,9 @@ int nopCounter = 0;
 int testpc = 0;
 
 
-int IFval = 5;
-int EXval = 5;
-int MEMval = 6;
+int macces_val = 6;
+int excecution_val = 5;
+int mult_val = 5;
 
 char *mycat(char *cur, char *next){
 	char *string = malloc(strlen(cur) + strlen(next) + 1);
@@ -259,7 +259,7 @@ struct inst parser(char *instr_str){
 	
 }
 
-void IF(int* IF_counter, struct inst inst_mem[]){
+void IF(int* IF_counter, struct inst inst_mem[], long* pgm_c){
 /*	Fetches the instruction struct from memory
   	Writes istr.opcode into latch.opcode 
   	Writes istr.rd into latch.dest 
@@ -267,7 +267,8 @@ void IF(int* IF_counter, struct inst inst_mem[]){
   	Writes istr.rt into latch.data2
   	Writes istr.imm into latch.data3i
   	Sets valid bit to 0	*/
-  	struct inst i = inst_mem[testpc];
+  	struct inst i = inst_mem[((*pgm_c)/4)];
+  	printf("PROGRAM COUNTER =============================== %d", (*pgm_c)/4);
   	
   	if((*IF_counter)>0){
 		(*IF_counter)--;
@@ -281,8 +282,8 @@ void IF(int* IF_counter, struct inst inst_mem[]){
 			IF_ID.data1 = i.rs;
 			IF_ID.data2 = i.rt;
 			IF_ID.data3 = i.immediate;
-			testpc++; 
-			assert(testpc>=0); 
+			(*pgm_c)+=4; 
+			assert((*pgm_c)>=0); 
 		}
 		else{
 			IF_ID.opcode = 0;
@@ -294,14 +295,14 @@ void IF(int* IF_counter, struct inst inst_mem[]){
 			assert(nopCounter>=0);
 		}
 		IF_ID.valid = 1;
-		*IF_counter = IFval;
+		*IF_counter = macces_val;
   	}
   	else{
 	  	return;	
 	}
 }
 
-void ID(int* ID_counter, long mips_reg[]){
+void ID(int* ID_counter, long mips_reg[], long* pgm_c){
 /*	Writes IF_ID.opcode ID_EX.opcode
 	
 	If add, sub, mul
@@ -333,8 +334,8 @@ void ID(int* ID_counter, long mips_reg[]){
 			ID_EX.data1 = 0;
 			ID_EX.data2 = 0;
 			ID_EX.data3 = 0;
-			testpc--;
-			assert(testpc>=0);
+			//(*pgm_c)-=4;
+			//assert((*pgm_c)>=0);
 		}
 		//Check to see if RAW hazard exists at MEM_WB, clear latch if exists
 		else if(((IF_ID.data1==MEM_WB.dest)|(IF_ID.data2==MEM_WB.dest))&&(MEM_WB.dest>0)){
@@ -349,21 +350,32 @@ void ID(int* ID_counter, long mips_reg[]){
 			switch(ID_EX.opcode){
 				case(0):
 				case(1):
-				case(2):
 					ID_EX.dest = IF_ID.dest;
 					ID_EX.data1 = mips_reg[IF_ID.data1];
 					ID_EX.data2 = mips_reg[IF_ID.data2];
 					break;
+				case(2):
+					ID_EX.dest = IF_ID.dest;
+					ID_EX.data1 = mips_reg[IF_ID.data1];
+					ID_EX.data2 = mips_reg[IF_ID.data2];
+					ID_EX.data3 = 1;
+					break;
 				case(3):
+					ID_EX.dest = IF_ID.data2;
+					ID_EX.data1 = mips_reg[IF_ID.data1];
+					ID_EX.data2 = IF_ID.data3;
+					break;
 				case(4):
 					ID_EX.dest = IF_ID.data2;
 					ID_EX.data1 = mips_reg[IF_ID.data1];
 					ID_EX.data2 = IF_ID.data3;
+					ID_EX.data3 = 2;
 					break;
 				case(5):
 					ID_EX.dest = mips_reg[IF_ID.data2];
 					ID_EX.data1 = mips_reg[IF_ID.data1];
 					ID_EX.data2 = IF_ID.data3;
+					ID_EX.data3 = 2;
 				case(6):
 					ID_EX.dest = IF_ID.data3;
 					ID_EX.data1 = mips_reg[IF_ID.data1];
@@ -381,12 +393,15 @@ void ID(int* ID_counter, long mips_reg[]){
 	}
 }
 
-void EX(int* EX_counter){
+void EX(int* EX_counter, long* pgm_c){
 /*	Writes ID_EX.opcode into EX_MEM.opcode
 	Writes ID_EX.dest into EX_MEM.dest
 	Operates on ID_EX.data1 and ID_EX.data2 and puts into EX_MEM.data1
 	depending on opcode */
-
+	if(ID_EX.data3==1){
+		(*EX_counter) = mult_val;
+		ID_EX.data3 = 0;
+	}
 	if(ID_EX.valid==1 && (*EX_counter)>0){
 			(*EX_counter)--;
 			assert((*EX_counter)>=0);
@@ -394,6 +409,7 @@ void EX(int* EX_counter){
 	if((*EX_counter)==0 && EX_MEM.valid==0){
   		EX_MEM.opcode = ID_EX.opcode;
 		EX_MEM.dest = ID_EX.dest;
+		EX_MEM.data3 = ID_EX.data3;
 		switch(EX_MEM.opcode){
 			case(0):
 				EX_MEM.data1 = ID_EX.data1+ID_EX.data2;
@@ -411,13 +427,14 @@ void EX(int* EX_counter){
 				break;
 			case(6):
 				if((ID_EX.data1-ID_EX.data2)==0){
-					testpc = testpc + EX_MEM.dest;
+					(*pgm_c)+=EX_MEM.dest;
+					assert((*pgm_c)>=0);
 				}
 				break;
 			}
 		ID_EX.valid=0;
 		EX_MEM.valid=1;
-		*EX_counter=EXval;	
+		*EX_counter=excecution_val;	
   	}
   	else{
 		return;
@@ -438,6 +455,11 @@ void MEM(int* MEM_counter){
 	Writes EX_MEM.dest into data_mem[EX_MEM.data1]
 
 	IF beq..... */
+
+	if(EX_MEM.data3==2){
+		(*MEM_counter) = macces_val;
+		EX_MEM.data3 = 0;
+	}
 
 	if(EX_MEM.valid==1 && (*MEM_counter)>0){
 			(*MEM_counter)--;
@@ -465,7 +487,7 @@ void MEM(int* MEM_counter){
 		}
 		EX_MEM.valid=0;
 		MEM_WB.valid=1;
-		*MEM_counter=MEMval;
+		*MEM_counter=1;
   	}
   	else{
 		return;
@@ -517,10 +539,10 @@ int main (int argc, char *argv[]){
 	long pgm_c=0;//program counter
 	long sim_cycle=0;//simulation cycle counter
 	//define your own counter for the usage of each pipeline stage here
-	int IF_counter = IFval;
+	int IF_counter = macces_val;
 	int ID_counter = 1;
-	int EX_counter = EXval;
-	int MEM_counter = MEMval;
+	int EX_counter = excecution_val;
+	int MEM_counter = macces_val;
 	int WB_counter = 1;
 
 	
@@ -601,21 +623,6 @@ int main (int argc, char *argv[]){
 	}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ////////JOHN TESTING////////////
 /*
 	mips_reg[7] = 5;
@@ -633,7 +640,7 @@ int main (int argc, char *argv[]){
 	
 	
 	int k=0;
-	while(k<800){
+	while(k<550){
 		printf("PC%d\n",testpc);
 		WB(&WB_counter, mips_reg);
 		MEM(&MEM_counter);
@@ -681,11 +688,11 @@ int main (int argc, char *argv[]){
 	//Will then run out rest of pipeline then stop simulation?
 	while(1){
 		//run through pipeline
-		WB(&WB_counter, mips_reg);
+		WB(&WB_counter,mips_reg);
 		MEM(&MEM_counter);
-		EX(&EX_counter);
-		ID(&ID_counter, mips_reg);
-		IF(&IF_counter, inst_mem);
+		EX(&EX_counter, &pgm_c);
+		ID(&ID_counter,mips_reg,&pgm_c);
+		IF(&IF_counter,inst_mem,&pgm_c);
 		/////////////////////////////////////////////////code2.c: The following code will output the register calue to 
 		//screen at every cycle and wait for the ENTER key to be pressed;
 		//this will make it proceed to the next cycle
@@ -696,7 +703,7 @@ int main (int argc, char *argv[]){
 			}
 		}
 		printf("%d\n",pgm_c);
-		pgm_c+=4;
+		//pgm_c+=4;
 		sim_cycle+=1;
 		test_counter++;
 		if(sim_mode==1){
