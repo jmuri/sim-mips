@@ -90,7 +90,7 @@ char *progScanner(char *instr_str){
 }
 
 char *regNumberConverter(char *instr_str){
-  char delimiter[] = " $"; 
+  char delimiter[] = " $\n"; 
   char *converted = (char*)malloc(100*sizeof(char)); 
   char* token; 
   int token_cnt = 0;
@@ -141,13 +141,13 @@ char *regNumberConverter(char *instr_str){
     //following statements check for invalid register values
     else if(!(atoi(token) >= 0 && atoi(token) <= 31) && (token_cnt != 2) && (addi_beq==1)) return NULL;
     else if(!(atoi(token) >= 0 && atoi(token) <= 31) && (token_cnt != 1) && (sw_lw==1)) return NULL;
-    else if(!(atoi(token) >= 0 && atoi(token) <= 31) && (sw_lw == 0) && (addi_beq == 0)) return NULL;
+    else if((atoi(token) < 0 || atoi(token) > 31) && (sw_lw == 0) && (addi_beq == 0)) return NULL;
     else converted = mycat(converted, token); 
     converted = mycat(converted, " "); 
     token = strtok(NULL, delimiter);
     token_cnt++; 
   } 
-  //printf("%s\n", converted); 
+  printf("%s\n", converted); 
   return converted; 
 }
 
@@ -207,9 +207,9 @@ struct inst parser(char *instr_str){
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
 		token = strtok(NULL, delimiter);
-		if(atoi(token)%4!=0){
-			instruction.immediate = -1;
-			return instruction;
+		if(atoi(token)%4 !=0 || atoi(token) > 65535){
+			printf("error: %s is an illegal offset\n", token);
+			exit(1);
 		}
 		instruction.immediate = atoi(token);
 		token = strtok(NULL, delimiter);
@@ -221,9 +221,9 @@ struct inst parser(char *instr_str){
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
 		token = strtok(NULL, delimiter);
-		if(atoi(token)%4!=0){
-			instruction.immediate = -1;
-			return instruction;
+		if(atoi(token)%4 != 0 || atoi(token) > 65535){
+			printf("error: %s is an illegal offset\n", token);
+			exit(1);
 		}
 		instruction.immediate = atoi(token);
 		token = strtok(NULL, delimiter);
@@ -237,9 +237,9 @@ struct inst parser(char *instr_str){
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
 		token = strtok(NULL, delimiter);
-		if(atoi(token)%4!=0){
-			instruction.immediate = -1;
-			return instruction;
+		if(atoi(token)%4 != 0 || atoi(token) > 65535){
+			printf("error: %s is an illegal offset\n", token);
+			exit(1);
 		}
 		instruction.immediate = atoi(token);
 		instruction.rd = 0;
@@ -250,11 +250,15 @@ struct inst parser(char *instr_str){
 		instruction.rs = 0;
 		instruction.rt = 0;
 		instruction.immediate = 0;
-	}else{
-		printf("error: invalid opcode\n");
-		exit(0);
 	}
-	//printf("%d %d %d %d %d %d\n", instruction.opcode, instruction.rd, instruction.rs, instruction.rt, instruction.immediate, instruction.offset);
+	else{
+		instruction.opcode = -2;
+		instruction.rd = 0;
+		instruction.rs = 0;
+		instruction.rt = 0;
+		instruction.immediate = 0;
+	}
+	printf("%d %d %d %d %d %d\n", instruction.opcode, instruction.rd, instruction.rs, instruction.rt, instruction.immediate);
 	return instruction;
 	
 }
@@ -610,12 +614,16 @@ int main (int argc, char *argv[]){
 		valid = regNumberConverter(progScanner(instr_str));
 		if(valid==NULL){
 			printf("error: instruction %i contains an invalid register\n", inst_cnt);
-			return 0;
+			return 1;
 		}
 		parsed_instruction = parser(valid);
+		if(parsed_instruction.opcode == -2){
+			printf("error: instruction %i contains an invalid opcode\n", inst_cnt);
+			return 1;
+		}
 		if(parsed_instruction.immediate==-1){
 			printf("error: instruction %i contains an invalid offset value\n", inst_cnt);
-			return 0;
+			return 1;
 		}
 		inst_mem[inst_cnt] = parsed_instruction;
 //		printf("op: %i rd: %i rs: %i rt: %i imm: %i\n", inst_mem[inst_cnt].opcode, inst_mem[inst_cnt].rd, inst_mem[inst_cnt].rs, inst_mem[inst_cnt].rt, inst_mem[inst_cnt].immediate);
