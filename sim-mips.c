@@ -160,7 +160,7 @@ char *regNumberConverter(char *instr_str){
     token = strtok(NULL, delimiter);
     token_cnt++; 
   } 
-  printf("%s\n", converted); 
+  //printf("%s\n", converted); 
   return converted; 
 }
 
@@ -639,7 +639,7 @@ int main (int argc, char *argv[]){
 			return 1;
 		}
 		inst_mem[inst_cnt] = parsed_instruction;
-		printf("op: %i rd: %i rs: %i rt: %i imm: %i\n", inst_mem[inst_cnt].opcode, inst_mem[inst_cnt].rd, inst_mem[inst_cnt].rs, inst_mem[inst_cnt].rt, inst_mem[inst_cnt].immediate);
+		//printf("op: %i rd: %i rs: %i rt: %i imm: %i\n", inst_mem[inst_cnt].opcode, inst_mem[inst_cnt].rd, inst_mem[inst_cnt].rs, inst_mem[inst_cnt].rt, inst_mem[inst_cnt].immediate);
 		inst_cnt++;
 	}
 
