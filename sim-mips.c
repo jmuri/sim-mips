@@ -7,6 +7,7 @@
 #include <math.h>
 #include <assert.h>
 #include <stdint.h>
+#include <ctype.h>
 //feel free to add here any additional library names you may need 
 #define SINGLE 1
 #define BATCH 0
@@ -155,6 +156,7 @@ char *regNumberConverter(char *instr_str){
     else if(!(atoi(token) >= 0 && atoi(token) <= 31) && (token_cnt != 2) && (addi_beq==1)) {printf("2\n"); return NULL;}
     else if(!(atoi(token) >= 0 && atoi(token) <= 31) && (token_cnt != 1) && (sw_lw==1)) {printf("3\n"); return NULL;}
     else if((atoi(token) < 0 || atoi(token) > 31) && (sw_lw == 0) && (addi_beq == 0)) {printf("4\n"); return NULL;}
+    else if(strstr(token, ".") != NULL){return NULL;}
     else converted = mycat(converted, token); 
     converted = mycat(converted, " "); 
     token = strtok(NULL, delimiter);
@@ -285,8 +287,6 @@ void IF(int* IF_counter, struct inst inst_mem[], long* pgm_c){
   	Writes istr.imm into latch.data3i
   	Sets valid bit to 0	*/
   	struct inst i = inst_mem[((*pgm_c)/4)];
-  	printf("PROGRAM COUNTER =============================== %d", (*pgm_c)/4);
-  	
   	if((*IF_counter)>0){
 		(*IF_counter)--;
 		assert((*IF_counter)>=0);	
