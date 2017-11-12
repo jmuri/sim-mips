@@ -54,13 +54,16 @@ char *mycat(char *cur, char *next){
 	for (; *cur ; *string++ = *cur++);
 	for (; *next ; *string++ = *next++);
 	//*string = '\0';
-	return res;  
+	return res; 
 }
 
 char *progScanner(char *instr_str){
 	char delimiters[] = " ,()\n";
 	char *scanned = (char*)malloc(100*sizeof(char));
 	char* token;
+	int sw_lw = 0;
+	int addi_beq = 0;
+	int token_cnt = 0;
 
 	//following loop and if statement checks for mismatched parenthesis
 	int count =0;
@@ -81,16 +84,24 @@ char *progScanner(char *instr_str){
 	token = strtok(instr_str, delimiters);
 	//builds instruction without parenthesis or commas
 	while(token != NULL){
+		if(!strcmp(token, "lw") || !strcmp(token, "sw")) sw_lw = 1;
+  		if(!strcmp(token, "addi") || !strcmp(token, "beq")) addi_beq = 1;
+  		if(((sw_lw && token_cnt != 2) || (addi_beq && token_cnt < 3) || (!sw_lw && !addi_beq)) 
+  			&& token[0] != '$' && token_cnt != 0 ){
+  			printf("error: %s is not a register\n", token);
+  			exit(1);
+  		}
 		scanned = mycat(scanned, token);
 		scanned = mycat(scanned, " ");
 		token = strtok(NULL, delimiters);
+		token_cnt++;
 	}
 	//printf("%s\n", scanned);
 	return scanned;
 }
 
 char *regNumberConverter(char *instr_str){
-  char delimiter[] = " $\n"; 
+  char delimiter[] = " $"; 
   char *converted = (char*)malloc(100*sizeof(char)); 
   char* token; 
   int token_cnt = 0;
@@ -155,7 +166,7 @@ struct inst parser(char *instr_str){
 	//No idea why they suggest to use enum here, we're passed character array, not literals.
 	char *token;
 	char *parsed = (char*)malloc(100*sizeof(char));
-	char delimiter[] = " \n";
+	char delimiter[] = " ";
 	int i = 0;
 	int r = 0;
 	int sw_lw = 0;
@@ -258,7 +269,7 @@ struct inst parser(char *instr_str){
 		instruction.rt = 0;
 		instruction.immediate = 0;
 	}
-	printf("%d %d %d %d %d %d\n", instruction.opcode, instruction.rd, instruction.rs, instruction.rt, instruction.immediate);
+	//printf("%d %d %d %d %d %d\n", instruction.opcode, instruction.rd, instruction.rs, instruction.rt, instruction.immediate);
 	return instruction;
 	
 }
@@ -626,7 +637,7 @@ int main (int argc, char *argv[]){
 			return 1;
 		}
 		inst_mem[inst_cnt] = parsed_instruction;
-//		printf("op: %i rd: %i rs: %i rt: %i imm: %i\n", inst_mem[inst_cnt].opcode, inst_mem[inst_cnt].rd, inst_mem[inst_cnt].rs, inst_mem[inst_cnt].rt, inst_mem[inst_cnt].immediate);
+		printf("op: %i rd: %i rs: %i rt: %i imm: %i\n", inst_mem[inst_cnt].opcode, inst_mem[inst_cnt].rd, inst_mem[inst_cnt].rs, inst_mem[inst_cnt].rt, inst_mem[inst_cnt].immediate);
 		inst_cnt++;
 	}
 
