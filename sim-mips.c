@@ -150,9 +150,11 @@ char *regNumberConverter(char *instr_str){
     else if(!strcmp(token, "fp")) converted = mycat(converted, "30"); 
     else if(!strcmp(token, "ra")) converted = mycat(converted, "31");
     //following statements check for invalid register values
-    else if(!(atoi(token) >= 0 && atoi(token) <= 31) && (token_cnt != 2) && (addi_beq==1)) return NULL;
-    else if(!(atoi(token) >= 0 && atoi(token) <= 31) && (token_cnt != 1) && (sw_lw==1)) return NULL;
-    else if((atoi(token) < 0 || atoi(token) > 31) && (sw_lw == 0) && (addi_beq == 0)) return NULL;
+    else if(!isdigit(token[1]) && strcmp(token, "sp") && strcmp(token, "fp") && token[1] != NULL &&
+    	strcmp(token, "ra") && strcmp(token, "zero") ) {printf("1 %s\n", token); return NULL;}
+    else if(!(atoi(token) >= 0 && atoi(token) <= 31) && (token_cnt != 2) && (addi_beq==1)) {printf("2\n"); return NULL;}
+    else if(!(atoi(token) >= 0 && atoi(token) <= 31) && (token_cnt != 1) && (sw_lw==1)) {printf("3\n"); return NULL;}
+    else if((atoi(token) < 0 || atoi(token) > 31) && (sw_lw == 0) && (addi_beq == 0)) {printf("4\n"); return NULL;}
     else converted = mycat(converted, token); 
     converted = mycat(converted, " "); 
     token = strtok(NULL, delimiter);
