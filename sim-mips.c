@@ -82,6 +82,8 @@ char *progScanner(char *instr_str){
 	int sw_lw = 0;
 	int addi_beq = 0;
 	int token_cnt = 0;
+	//make sure input string 
+	assert(strlen(instr_str) <= 100);
 
 	//following loop and if statement checks for mismatched parenthesis
 	int count =0;
@@ -300,7 +302,6 @@ struct inst parser(char *instr_str){
 		instruction.rt = 0;
 		instruction.immediate = 0;
 	}
-	//printf("%d %d %d %d %d %d\n", instruction.opcode, instruction.rd, instruction.rs, instruction.rt, instruction.immediate);
 	return instruction;
 	
 }
@@ -383,7 +384,7 @@ void ID(int* ID_counter, long mips_reg[], long* pgm_c){
 	if((*ID_counter)==0 && ID_EX.valid==0){
   		ID_EX.opcode = IF_ID.opcode;
 		//Check to see if RAW hazard exists at EX_MEM
-		if(((IF_ID.data1==EX_MEM.dest)|(IF_ID.data2==EX_MEM.dest))&&(EX_MEM.dest>0)){
+		if(((IF_ID.data1==EX_MEM.dest)||(IF_ID.data2==EX_MEM.dest))&&(EX_MEM.dest>0)){
 			nopCounter++;
 			nopTotal++;
 			ID_EX.opcode = 0;
@@ -395,7 +396,7 @@ void ID(int* ID_counter, long mips_reg[], long* pgm_c){
 			assert((*pgm_c)>=0);
 		}
 		//Check to see if RAW hazard exists at MEM_WB
-		else if(((IF_ID.data1==MEM_WB.dest)|(IF_ID.data2==MEM_WB.dest))&&(MEM_WB.dest>0)){
+		else if(((IF_ID.data1==MEM_WB.dest)||(IF_ID.data2==MEM_WB.dest))&&(MEM_WB.dest>0)){
 			ID_EX.opcode = 0;
 			ID_EX.dest = 0;
 			ID_EX.data1 = 0;
