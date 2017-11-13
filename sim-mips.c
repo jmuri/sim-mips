@@ -60,7 +60,7 @@ int hasletter(char *token){
 	int i;
 	for(i = 0; i<strlen(token);i++){
 		if(token[i] == '-' && i == 0) i++;
-		if(isdigit(token[i])==0){return 0;}
+		if(isdigit(token[i])==0) return 0;
 	}
 	return 1;
 }
@@ -68,7 +68,7 @@ int hasletter(char *token){
 int isdecimal(char *token){
 	int i;
 	for(i = 0; i<strlen(token);i++){
-		if(strcmp(&token[i], ".")==0){return 0;}
+		if(strcmp(&token[i], ".")==0) return 0;
 	}
 	return 1;
 }
@@ -167,12 +167,12 @@ char *regNumberConverter(char *instr_str){
     else if(!strcmp(token, "ra")) converted = mycat(converted, "31");
     //following statements check for invalid register values
     else if(!isdigit(token[1]) && strcmp(token, "sp") && strcmp(token, "fp") && token[1] != NULL &&
-    	strcmp(token, "ra") && strcmp(token, "zero") ) {printf("1 %s\n", token); return NULL;}
-    else if(!(atoi(token) >= 0 && atoi(token) <= 31) && (token_cnt != 2) && (addi_beq==1)) {printf("2\n");return NULL;}
-    else if(!(atoi(token) >= 0 && atoi(token) <= 31) && (token_cnt != 1) && (sw_lw==1)) {printf("3\n");return NULL;}
-    else if((atoi(token) < 0 || atoi(token) > 31) && (sw_lw == 0) && (addi_beq == 0)) {printf("4\n");return NULL;}
-    else if(isdecimal(token)==0){printf("5\n");return NULL;}
-    else if(hasletter(token)==0){printf("6\n");return NULL;}
+    	strcmp(token, "ra") && strcmp(token, "zero") ) return NULL;
+    else if(!(atoi(token) >= 0 && atoi(token) <= 31) && (token_cnt != 2) && (addi_beq==1)) return NULL;
+    else if(!(atoi(token) >= 0 && atoi(token) <= 31) && (token_cnt != 1) && (sw_lw==1)) return NULL;
+    else if((atoi(token) < 0 || atoi(token) > 31) && (sw_lw == 0) && (addi_beq == 0)) return NULL;
+    else if(isdecimal(token)==0) return NULL;
+    else if(hasletter(token)==0) return NULL;
     else converted = mycat(converted, token); 
     converted = mycat(converted, " "); 
     token = strtok(NULL, delimiter);
