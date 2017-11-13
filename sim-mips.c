@@ -306,20 +306,19 @@ struct inst parser(char *instr_str){
 }
 
 void IF(int* IF_counter, struct inst inst_mem[], long* pgm_c){
-/*	Fetches the instruction struct from memory
-  	Writes istr.opcode into latch.opcode 
-  	Writes istr.rd into latch.dest 
-  	Writes istr.rs into latch.data1
-  	Writes istr.rt into latch.data2
-  	Writes istr.imm into latch.data3i
-  	Sets valid bit to 0	*/
+ /* If a nop is not queued (nopCounter==0), then fetch instruction
+ 	From memory and write it into latch if current IF_ID latch 
+ 	data has already been used. If nop is queued, then execute a 
+ 	noop */
   	struct inst i = inst_mem[((*pgm_c)/4)];
   	
+  	//Decrease IF counter to keep track of execution time
   	if((*IF_counter)>0){
 		(*IF_counter)--;
 		assert((*IF_counter)>=0);	
   	}
 
+  	//If done executing, write data into latch
   	if((*IF_counter)==0 && IF_ID.valid==0){
   		if(nopCounter==0){
 			IF_ID.opcode = i.opcode;
@@ -330,6 +329,7 @@ void IF(int* IF_counter, struct inst inst_mem[], long* pgm_c){
 			(*pgm_c)+=4; 
 			assert((*pgm_c)>=0); 
 		}
+		//Write a noop if needed
 		else{
 			IF_ID.opcode = 0;
 			IF_ID.dest = 0;
@@ -343,28 +343,38 @@ void IF(int* IF_counter, struct inst inst_mem[], long* pgm_c){
 		*IF_counter = macces_val;
 		ifUtil++;
   	}
+  	//If not done executing, do nothing
   	else{
 	  	return;	
 	}
 }
 
 void ID(int* ID_counter, long mips_reg[], long* pgm_c){
-/*	Writes IF_ID.opcode ID_EX.opcode
-	
-	If add, sub, mul
-	Writes IF_ID.dest into ID_EX.dest
-	Writes mips_reg[IF_ID.data1] into ID_EX.data1
-	Writes mips_reg[IF_ID.data2] into ID_EX.data2
+/*	If ID_counter is zero and ID_EX latch data has already been used:
+	Writes IF_ID.opcode ID_EX.opcode
+	-If add, sub, mul
+	Write rd into ID_EX latch destination
+	Load register rs data into ID_EX latch data1
+	Load register rt data into ID_EX latch data2
+	If multiplication, set ID_EX.data3 to 1
+	-If addi, lw
+	Write rt into ID_EX latch destination
+	Load register rs data into ID_EX latch data1
+	Write immediate/offset into ID_EX latch data2
+	Set ID_EX.data3 to 2 if mem access is needed
+	-If sw
+	Load register rt data into ID_EX latch destination
+	Load register rs data into ID_EX latch data1
+	Write offset into ID_EX latch data2
+	Set ID_EX.data 3 to 2 to indicate a mem access
+	-If beq, queue a nop
+	Load offset into ID_EX latch destination
+	Load register rs data into ID_EX latch data1
+	Load register rt data inot ID_EX latch data2
 
-	If addi, lw, sw
-	Writes IF_ID.data2 into ID_EX.dest
-	Writes mips[IF_ID.data1] into ID_EX.data1
-	Writes IF_ID.data3 into ID_EX.data2
-
-	If beq, increase nop counter
-
-	/*To check for raw hazards, check that EX_MEM.dest != ID source reg,
-	then enter two nops. If MEM_WB!= ID source reg, enter 1 nop*/
+	To check for raw hazards, if EX_MEM dest is same as ID_EX 
+	source registers, add clear latch and queue nop. If MEM_WB
+	dest is same as ID_EX source registers, clear latch*/
 
 	if(IF_ID.valid==1 && (*ID_counter)>0){
 			(*ID_counter)--;
@@ -372,7 +382,7 @@ void ID(int* ID_counter, long mips_reg[], long* pgm_c){
 	}
 	if((*ID_counter)==0 && ID_EX.valid==0){
   		ID_EX.opcode = IF_ID.opcode;
-		//Check to see if RAW hazard exists at EX_MEM, clear latch if exists
+		//Check to see if RAW hazard exists at EX_MEM
 		if(((IF_ID.data1==EX_MEM.dest)|(IF_ID.data2==EX_MEM.dest))&&(EX_MEM.dest>0)){
 			nopCounter++;
 			nopTotal++;
@@ -384,7 +394,7 @@ void ID(int* ID_counter, long mips_reg[], long* pgm_c){
 			(*pgm_c)-=4;
 			assert((*pgm_c)>=0);
 		}
-		//Check to see if RAW hazard exists at MEM_WB, clear latch if exists
+		//Check to see if RAW hazard exists at MEM_WB
 		else if(((IF_ID.data1==MEM_WB.dest)|(IF_ID.data2==MEM_WB.dest))&&(MEM_WB.dest>0)){
 			ID_EX.opcode = 0;
 			ID_EX.dest = 0;
@@ -438,6 +448,7 @@ void ID(int* ID_counter, long mips_reg[], long* pgm_c){
 		*ID_counter=1;
 		idUtil++;
   	}
+  	//If counter >0, do nothing
   	else{
 		return;
 	}
@@ -446,8 +457,13 @@ void ID(int* ID_counter, long mips_reg[], long* pgm_c){
 void EX(int* EX_counter, long* pgm_c){
 /*	Writes ID_EX.opcode into EX_MEM.opcode
 	Writes ID_EX.dest into EX_MEM.dest
-	Operates on ID_EX.data1 and ID_EX.data2 and puts into EX_MEM.data1
-	depending on opcode */
+	Operates on ID_EX.data1 and ID_EX.data2 and puts result into 
+	EX_MEM.data1 depending on opcode 
+
+	If beq, subtract ID_EX.data2 from ID_EX.data1, and 
+	if equal to zero, add ID_EX destination to program counter */
+
+	//Checks to see if multiplcation is needed and sets timer to mult time
 	if(ID_EX.data3==1){
 		(*EX_counter) = mult_val;
 		ID_EX.data3 = 0;
@@ -477,7 +493,7 @@ void EX(int* EX_counter, long* pgm_c){
 				break;
 			case(6):
 				if((ID_EX.data1-ID_EX.data2)==0){
-					(*pgm_c)+=EX_MEM.dest;
+					(*pgm_c)+=(4*EX_MEM.dest);
 					assert((*pgm_c)>=0);
 				}
 				break;
@@ -487,6 +503,7 @@ void EX(int* EX_counter, long* pgm_c){
 		*EX_counter=excecution_val;	
 		exUtil++;
   	}
+  	//If counter>0, do nothing
   	else{
 		return;
 	}	
@@ -495,16 +512,14 @@ void EX(int* EX_counter, long* pgm_c){
 void MEM(int* MEM_counter){
 /*	Writes EX_MEM.opcode into MEM_WB.opcode
 	Writes EX_MEM.dest into MEM_WB.dest
-
-	If add, sub, mul, addi, there is no memory access and takes one cycle
+	-If add, sub, mul, addi, there is no memory access and takes one cycle
 	Writes EX_MEM.data1 into MEM_WB.data1
-
-	If lw
+	-If lw
 	Writes data_mem[EX_MEM.data1] into MEM_WB.data1
-
-	IF sw
+	-If sw
 	Writes EX_MEM.dest into data_mem[EX_MEM.data1]*/
 
+	//Checks to see if memaccess is needed and sets timer to maccess time
 	if(EX_MEM.data3==2){
 		(*MEM_counter) = macces_val;
 		EX_MEM.data3 = 0;
@@ -539,6 +554,7 @@ void MEM(int* MEM_counter){
 		*MEM_counter=1;
 		memUtil++;
   	}
+  	//If counter>0, do nothing
   	else{
 		return;
 	}
@@ -547,10 +563,8 @@ void MEM(int* MEM_counter){
 void WB(int* WB_counter, long mips_reg[]){
 /* 	If add, sub, mult, addi, lw
 	Writes MEM_WB.data1 into mips_reg[MEM_WB.dest]
-
 	If sw
 	Nothing gets written to the registers */
-
 	if(MEM_WB.valid==1 && (*WB_counter)>0){
 			(*WB_counter)--;
 			assert((*WB_counter)>=0);
@@ -563,6 +577,7 @@ void WB(int* WB_counter, long mips_reg[]){
 		*WB_counter=1;
 		wbUtil++;
   	}
+  	//If counter>0, do nothing
   	else{
 		return;
 	}
@@ -638,19 +653,22 @@ int main (int argc, char *argv[]){
 		exit(0);
 	}
 	//Initalize registers and program counter
-	//if(sim_mode==1){
+	if(sim_mode==1){
 		for (i=0;i<REG_NUM;i++){
 			mips_reg[i]=0;
 		}
-	//}
+	}
 	/////////////////////////////////////////////////End of code1.c
-
 	//Start your code here
+	for (i=0;i<REG_NUM;i++){
+			mips_reg[i]=0;
+	}
 
 	macces_val = c;
 	excecution_val = n;
 	mult_val = m;
 
+	//initialize counters
 	int IF_counter = macces_val+1;
 	int ID_counter = 1;
 	int EX_counter = excecution_val;
@@ -685,11 +703,8 @@ int main (int argc, char *argv[]){
 		inst_cnt++;
 	}
 
-////////Jackson Testing/////////
-	//Main loop will be while the command is not haltSimulation
-	//Will then run out rest of pipeline then stop simulation?
 	while(1){
-		//always ensure $0 = 0
+		//always ensure $zero = 0
 		mips_reg[0] = 0;
 		//run through pipeline
 		WB(&WB_counter,mips_reg);
@@ -708,7 +723,6 @@ int main (int argc, char *argv[]){
 			}
 		}
 		printf("%d\n",pgm_c);
-		//pgm_c+=4;
 		sim_cycle+=1;
 		test_counter++;
 		if(sim_mode==1){
