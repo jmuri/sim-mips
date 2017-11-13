@@ -278,7 +278,7 @@ struct inst parser(char *instr_str){
 		instruction.rt = atoi(token);
 		token = strtok(NULL, delimiter);
 		//make sure the immediate value is valid
-		if(atoi(token)%4 != 0 || atoi(token) > 32767 || atoi(token) < -32768){
+		if(atoi(token) > 32767 || atoi(token) < -32768){
 			printf("error: %s is an illegal offset\n", token);
 			exit(1);
 		}
