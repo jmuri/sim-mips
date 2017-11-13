@@ -657,7 +657,7 @@ int main (int argc, char *argv[]){
 	while(fgets(instr_str, 100, input)){
          	valid = regNumberConverter(progScanner(instr_str));
 		if(valid==NULL){
-			printf("error: instruction %i contains an invalid register\n", inst_cnt);
+			printf("error: instruction %i contains an invalid register or offset\n", inst_cnt);
 			return 1;
 		}
 		parsed_instruction = parser(valid);
