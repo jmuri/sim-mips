@@ -667,7 +667,7 @@ int main (int argc, char *argv[]){
 	while(fgets(instr_str, 100, input)){
         scan = progScanner(instr_str);
         if(scan == NULL){
-         	printf("error: instruction %i does not have \"$\" on a register\n", inst_cnt);
+         	printf("error: instruction %i does not have \"$\" on a register or has an invalid opcode\n", inst_cnt);
   			return 1;
         }
         valid = regNumberConverter(scan);
