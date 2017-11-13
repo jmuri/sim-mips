@@ -59,7 +59,7 @@ char *mycat(char *cur, char *next){
 int hasletter(char *token){
 	int i;
 	for(i = 0; i<strlen(token);i++){
-		if(token[i] == '-' && i == 0) i++;
+		if(token[i] == '-' && i == 0 && strlen(token) > 1) i++;
 		if(isdigit(token[i])==0) return 0;
 	}
 	return 1;
