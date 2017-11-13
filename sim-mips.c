@@ -29,8 +29,6 @@ struct inst{
 	int immediate;
 };
 
-
-
 //Global Variables
 //Initialize Latches
 struct latch IF_ID = {0};
@@ -40,13 +38,13 @@ struct latch MEM_WB = {0};
 //initialize instruction memory and data memory
 int32_t data_mem[512];
 struct inst inst_mem[512];
-int nopCounter = 0;
-int testpc = 0;
+int nopCounter = 0;//current total of nops queued to be executed
+int nopTotal = 0; //total nops exectued in the program
+int macces_val; //total cycles for a mem access
+int excecution_val; //total cycles for execution 
+int mult_val; //total cycles for multiplication
 
-
-int macces_val = 6;
-int excecution_val = 5;
-int mult_val = 5;
+float ifUtil, idUtil, exUtil, memUtil, wbUtil = 0;
 
 char *mycat(char *cur, char *next){
 	char *string = malloc(strlen(cur) + strlen(next) + 1);
@@ -268,7 +266,6 @@ void IF(int* IF_counter, struct inst inst_mem[], long* pgm_c){
   	Writes istr.imm into latch.data3i
   	Sets valid bit to 0	*/
   	struct inst i = inst_mem[((*pgm_c)/4)];
-  	printf("PROGRAM COUNTER =============================== %d", (*pgm_c)/4);
   	
   	if((*IF_counter)>0){
 		(*IF_counter)--;
@@ -296,6 +293,7 @@ void IF(int* IF_counter, struct inst inst_mem[], long* pgm_c){
 		}
 		IF_ID.valid = 1;
 		*IF_counter = macces_val;
+		ifUtil++;
   	}
   	else{
 	  	return;	
@@ -315,7 +313,7 @@ void ID(int* ID_counter, long mips_reg[], long* pgm_c){
 	Writes mips[IF_ID.data1] into ID_EX.data1
 	Writes IF_ID.data3 into ID_EX.data2
 
-	If beq... */
+	If beq, increase nop counter
 
 	/*To check for raw hazards, check that EX_MEM.dest != ID source reg,
 	then enter two nops. If MEM_WB!= ID source reg, enter 1 nop*/
@@ -329,13 +327,14 @@ void ID(int* ID_counter, long mips_reg[], long* pgm_c){
 		//Check to see if RAW hazard exists at EX_MEM, clear latch if exists
 		if(((IF_ID.data1==EX_MEM.dest)|(IF_ID.data2==EX_MEM.dest))&&(EX_MEM.dest>0)){
 			nopCounter++;
+			nopTotal++;
 			ID_EX.opcode = 0;
 			ID_EX.dest = 0;
 			ID_EX.data1 = 0;
 			ID_EX.data2 = 0;
 			ID_EX.data3 = 0;
-			//(*pgm_c)-=4;
-			//assert((*pgm_c)>=0);
+			(*pgm_c)-=4;
+			assert((*pgm_c)>=0);
 		}
 		//Check to see if RAW hazard exists at MEM_WB, clear latch if exists
 		else if(((IF_ID.data1==MEM_WB.dest)|(IF_ID.data2==MEM_WB.dest))&&(MEM_WB.dest>0)){
@@ -376,17 +375,20 @@ void ID(int* ID_counter, long mips_reg[], long* pgm_c){
 					ID_EX.data1 = mips_reg[IF_ID.data1];
 					ID_EX.data2 = IF_ID.data3;
 					ID_EX.data3 = 2;
+					break;
 				case(6):
 					ID_EX.dest = IF_ID.data3;
 					ID_EX.data1 = mips_reg[IF_ID.data1];
 					ID_EX.data2 = mips_reg[IF_ID.data2];
 					nopCounter++;
+					nopTotal++;
 					break;		
 			}
-			IF_ID.valid=0;
-			ID_EX.valid=1;
-			*ID_counter=1;
 		}
+		IF_ID.valid=0;
+		ID_EX.valid=1;
+		*ID_counter=1;
+		idUtil++;
   	}
   	else{
 		return;
@@ -435,6 +437,7 @@ void EX(int* EX_counter, long* pgm_c){
 		ID_EX.valid=0;
 		EX_MEM.valid=1;
 		*EX_counter=excecution_val;	
+		exUtil++;
   	}
   	else{
 		return;
@@ -452,9 +455,7 @@ void MEM(int* MEM_counter){
 	Writes data_mem[EX_MEM.data1] into MEM_WB.data1
 
 	IF sw
-	Writes EX_MEM.dest into data_mem[EX_MEM.data1]
-
-	IF beq..... */
+	Writes EX_MEM.dest into data_mem[EX_MEM.data1]*/
 
 	if(EX_MEM.data3==2){
 		(*MEM_counter) = macces_val;
@@ -488,6 +489,7 @@ void MEM(int* MEM_counter){
 		EX_MEM.valid=0;
 		MEM_WB.valid=1;
 		*MEM_counter=1;
+		memUtil++;
   	}
   	else{
 		return;
@@ -500,6 +502,7 @@ void WB(int* WB_counter, long mips_reg[]){
 
 	If sw
 	Nothing gets written to the registers */
+
 	if(MEM_WB.valid==1 && (*WB_counter)>0){
 			(*WB_counter)--;
 			assert((*WB_counter)>=0);
@@ -510,6 +513,7 @@ void WB(int* WB_counter, long mips_reg[]){
 		}
 		MEM_WB.valid=0;
 		*WB_counter=1;
+		wbUtil++;
   	}
   	else{
 		return;
@@ -539,12 +543,6 @@ int main (int argc, char *argv[]){
 	long pgm_c=0;//program counter
 	long sim_cycle=0;//simulation cycle counter
 	//define your own counter for the usage of each pipeline stage here
-	int IF_counter = macces_val;
-	int ID_counter = 1;
-	int EX_counter = excecution_val;
-	int MEM_counter = macces_val;
-	int WB_counter = 1;
-
 	
 	int test_counter=0;
 	FILE *input=NULL;
@@ -592,14 +590,24 @@ int main (int argc, char *argv[]){
 		exit(0);
 	}
 	//Initalize registers and program counter
-	if(sim_mode==1){
+	//if(sim_mode==1){
 		for (i=0;i<REG_NUM;i++){
 			mips_reg[i]=0;
 		}
-	}
+	//}
 	/////////////////////////////////////////////////End of code1.c
 
 	//Start your code here
+
+	macces_val = c;
+	excecution_val = n;
+	mult_val = m;
+
+	int IF_counter = macces_val+1;
+	int ID_counter = 1;
+	int EX_counter = excecution_val;
+	int MEM_counter = 1;
+	int WB_counter = 1;
 
 	char *instr_str;
 	char *valid;
@@ -622,77 +630,19 @@ int main (int argc, char *argv[]){
 		inst_cnt++;
 	}
 
-
-////////JOHN TESTING////////////
-/*
-	mips_reg[7] = 5;
-	mips_reg[8] =17;
-	data_mem[22] = 100;
-	struct inst tests[100];
-	tests[0] = (struct inst){3,0,0,1,13};
-	tests[1] = (struct inst){3,0,0,2,1};
-	tests[2] = (struct inst){3,0,0,3,1};
-	tests[3] = (struct inst){6,0,1,0,3};
-	tests[4] = (struct inst){2,2,2,1,0};
-	tests[5] = (struct inst){1,1,1,3,0};
-	tests[6] = (struct inst){6,0,0,0,-4};
-	tests[7] = (struct inst){0,4,2,0,0};
-	
-	
-	int k=0;
-	while(k<550){
-		printf("PC%d\n",testpc);
-		WB(&WB_counter, mips_reg);
-		MEM(&MEM_counter);
-		EX(&EX_counter);
-		ID(&ID_counter, mips_reg);
-		IF(&IF_counter, tests);
-		printf("total cycle: %d\n", k);
-		printf("=================================\n");
-		printf("IF");
-		displayLatch(IF_ID);
-		printf("ID");
-		displayLatch(ID_EX);
-		printf("EX");
-		displayLatch(EX_MEM);
-		printf("MEM");
-		displayLatch(MEM_WB);	
-		printf("WB\n");
-		printf("=================================\n");
-		printf("counter: %d %d %d %d %d\n", IF_counter, ID_counter, EX_counter, MEM_counter, WB_counter);
-		printf("cycle: %d ",sim_cycle);
-		for(i=1;i<REG_NUM;i++){
-			printf("%d  ",mips_reg[i]);
-		}
-		printf("\n");
-		k++;
-	}
-*/
-//////JOHN TESTING///////////
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ////////Jackson Testing/////////
 	//Main loop will be while the command is not haltSimulation
 	//Will then run out rest of pipeline then stop simulation?
 	while(1){
+		//always ensure $0 = 0
+		mips_reg[0] = 0;
 		//run through pipeline
 		WB(&WB_counter,mips_reg);
 		MEM(&MEM_counter);
 		EX(&EX_counter, &pgm_c);
 		ID(&ID_counter,mips_reg,&pgm_c);
 		IF(&IF_counter,inst_mem,&pgm_c);
+
 		/////////////////////////////////////////////////code2.c: The following code will output the register calue to 
 		//screen at every cycle and wait for the ENTER key to be pressed;
 		//this will make it proceed to the next cycle
@@ -711,19 +661,22 @@ int main (int argc, char *argv[]){
 			while(getchar() != '\n');
 		}
 		//end of code2.c
+
 		if(MEM_WB.opcode<0){break;}
 	}
 
-
-
-
+	/*Adjust utilization count for nops*/
+	ifUtil -= nopTotal;
+	idUtil -= nopTotal;
+	exUtil -= nopTotal;
+	memUtil -= nopTotal;
+	wbUtil -= nopTotal;
 
 //////////////////code3.c
-//	float ifUtil, idUtil, exUtil, memUtil, wbUtil = 0;
 	//Beginning of code3.c, code given to us to be put at the end of main
 	if(sim_mode==0){
 		fprintf(output,"program name: %s\n",argv[5]);
-//		fprintf(output,"stage utilization: %f  %f  %f  %f  %f \n", ifUtil, idUtil, exUtil, memUtil, wbUtil);
+		fprintf(output,"stage utilization: %f  %f  %f  %f  %f \n", ifUtil/sim_cycle, idUtil/sim_cycle, exUtil/sim_cycle, memUtil/sim_cycle, wbUtil/sim_cycle);
                      // add the (double) stage_counter/sim_cycle for each 
                      // stage following sequence IF ID EX MEM WB
 		
