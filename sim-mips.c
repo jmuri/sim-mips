@@ -47,6 +47,7 @@ int mult_val; //total cycles for multiplication
 
 float ifUtil, idUtil, exUtil, memUtil, wbUtil = 0;
 
+//replacement function for strcat()
 char *mycat(char *cur, char *next){
 	char *string = malloc(strlen(cur) + strlen(next) + 1);
 	char *res = string;
@@ -56,6 +57,7 @@ char *mycat(char *cur, char *next){
 	return res; 
 }
 
+//check if the passed string has a letter, excluding a beginning "-" for negative numbers
 int hasletter(char *token){
 	int i;
 	for(i = 0; i<strlen(token);i++){
@@ -102,17 +104,16 @@ char *progScanner(char *instr_str){
 	while(token != NULL){
 		if(!strcmp(token, "lw") || !strcmp(token, "sw")) sw_lw = 1;
   		if(!strcmp(token, "addi") || !strcmp(token, "beq")) addi_beq = 1;
+  		//check if a register does not contain "$"
   		if(((sw_lw && token_cnt != 2) || (addi_beq && token_cnt < 3) || (!sw_lw && !addi_beq)) 
   			&& token[0] != '$' && token_cnt != 0 ){
-  			printf("error: %s is not a register\n", token);
-  			exit(1);
+  			return NULL;
   		}
 		scanned = mycat(scanned, token);
 		scanned = mycat(scanned, " ");
 		token = strtok(NULL, delimiters);
 		token_cnt++;
 	}
-	//printf("%s\n", scanned);
 	return scanned;
 }
 
@@ -124,12 +125,14 @@ char *regNumberConverter(char *instr_str){
   int sw_lw = 0;
   int addi_beq = 0;
   token = strtok(instr_str, delimiter);
+  //check for cases of i-type instructions
   if(!strcmp(token, "lw") || !strcmp(token, "sw")) sw_lw = 1;
   if(!strcmp(token, "addi") || !strcmp(token, "beq")) addi_beq = 1;
   converted = mycat(converted, token);
   converted = mycat(converted, " ");
   token = strtok(NULL, delimiter);
 
+  //convert register values, or leave them if the numbers are valid
   while(token != NULL){
     if(!strcmp(token, "lw") || !strcmp(token, "sw")) sw_lw = 1;
     if(!strcmp(token, "addi") || !strcmp(token, "beq")) addi_beq = 1;
@@ -165,7 +168,7 @@ char *regNumberConverter(char *instr_str){
     else if(!strcmp(token, "sp")) converted = mycat(converted, "29"); 
     else if(!strcmp(token, "fp")) converted = mycat(converted, "30"); 
     else if(!strcmp(token, "ra")) converted = mycat(converted, "31");
-    //following statements check for invalid register values
+    //following statements check for invalid register or offset values
     else if(!isdigit(token[1]) && strcmp(token, "sp") && strcmp(token, "fp") && token[1] != NULL &&
     	strcmp(token, "ra") && strcmp(token, "zero") ) return NULL;
     else if(!(atoi(token) >= 0 && atoi(token) <= 31) && (token_cnt != 2) && (addi_beq==1)) return NULL;
@@ -182,7 +185,6 @@ char *regNumberConverter(char *instr_str){
 }
 
 struct inst parser(char *instr_str){
-	//No idea why they suggest to use enum here, we're passed character array, not literals.
 	char *token;
 	char *parsed = (char*)malloc(100*sizeof(char));
 	char delimiter[] = " ";
@@ -191,6 +193,7 @@ struct inst parser(char *instr_str){
 	int sw_lw = 0;
 	struct inst instruction;
 
+	//sets different struct values based on the opcode
 	token = strtok(instr_str, delimiter);
 	if(!strcmp(token, "add")){
 		instruction.opcode = 0;
@@ -209,6 +212,7 @@ struct inst parser(char *instr_str){
 		token = strtok(NULL, delimiter);
 		instruction.rs = atoi(token);
 		token = strtok(NULL, delimiter);
+		//make sure the immediate value is valid
 		if(atoi(token) > 32767 || atoi(token) < -32768){
 			printf("error: %s takes more than 16 bits\n", token); 		
 			exit(1);
@@ -241,6 +245,7 @@ struct inst parser(char *instr_str){
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
 		token = strtok(NULL, delimiter);
+		//make sure the immediate value is valid
 		if(atoi(token)%4 !=0 || atoi(token) > 32767 || atoi(token) < -32768){
 			printf("error: %s is an illegal offset\n", token);
 			exit(1);
@@ -255,6 +260,7 @@ struct inst parser(char *instr_str){
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
 		token = strtok(NULL, delimiter);
+		//make sure the immediate value is valid
 		if(atoi(token)%4 != 0 || atoi(token) > 32767 || atoi(token) < -32768){
 			printf("error: %s is an illegal offset\n", token);
 			exit(1);
@@ -271,6 +277,7 @@ struct inst parser(char *instr_str){
 		token = strtok(NULL, delimiter);
 		instruction.rt = atoi(token);
 		token = strtok(NULL, delimiter);
+		//make sure the immediate value is valid
 		if(atoi(token)%4 != 0 || atoi(token) > 32767 || atoi(token) < -32768){
 			printf("error: %s is an illegal offset\n", token);
 			exit(1);
@@ -285,6 +292,7 @@ struct inst parser(char *instr_str){
 		instruction.rt = 0;
 		instruction.immediate = 0;
 	}
+	//if it reaches the last condition, the instruction contains an invalid opcode
 	else{
 		instruction.opcode = -2;
 		instruction.rd = 0;
@@ -649,13 +657,20 @@ int main (int argc, char *argv[]){
 	int MEM_counter = 1;
 	int WB_counter = 1;
 
+	//following loop parses the input file, checks for errors, and puts parsed instructions into inst_mem
 	char *instr_str;
+	char *scan;
 	char *valid;
 	struct inst parsed_instruction;
 	instr_str = malloc(100*sizeof(char));
 	int inst_cnt = 0;
 	while(fgets(instr_str, 100, input)){
-         	valid = regNumberConverter(progScanner(instr_str));
+        scan = progScanner(instr_str);
+        if(scan == NULL){
+         	printf("error: instruction %i does not have \"$\" on a register\n", inst_cnt);
+  			return 1;
+        }
+        valid = regNumberConverter(scan);
 		if(valid==NULL){
 			printf("error: instruction %i contains an invalid register or offset\n", inst_cnt);
 			return 1;
@@ -663,10 +678,6 @@ int main (int argc, char *argv[]){
 		parsed_instruction = parser(valid);
 		if(parsed_instruction.opcode == -2){
 			printf("error: instruction %i contains an invalid opcode\n", inst_cnt);
-			return 1;
-		}
-		if(parsed_instruction.immediate==-1){
-			printf("error: instruction %i contains an invalid offset value\n", inst_cnt);
 			return 1;
 		}
 		inst_mem[inst_cnt] = parsed_instruction;
