@@ -82,6 +82,8 @@ char *progScanner(char *instr_str){
 	int sw_lw = 0;
 	int addi_beq = 0;
 	int token_cnt = 0;
+	//make sure input string 
+	assert(strlen(instr_str) <= 100);
 
 	//following loop and if statement checks for mismatched parenthesis
 	int count =0;
@@ -300,7 +302,6 @@ struct inst parser(char *instr_str){
 		instruction.rt = 0;
 		instruction.immediate = 0;
 	}
-	//printf("%d %d %d %d %d %d\n", instruction.opcode, instruction.rd, instruction.rs, instruction.rt, instruction.immediate);
 	return instruction;
 	
 }
