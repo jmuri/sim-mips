@@ -322,7 +322,8 @@ void IF(int* IF_counter, struct inst inst_mem[], long* pgm_c){
   	//Decrease IF counter to keep track of execution time
   	if((*IF_counter)>0){
 		(*IF_counter)--;
-		assert((*IF_counter)>=0);	
+		assert((*IF_counter)>=0);
+		ifUtil++;	
   	}
 
   	//If done executing, write data into latch
@@ -348,7 +349,6 @@ void IF(int* IF_counter, struct inst inst_mem[], long* pgm_c){
 		}
 		IF_ID.valid = 1;
 		*IF_counter = macces_val;
-		ifUtil++;
   	}
   	//If not done executing, do nothing
   	else{
@@ -386,6 +386,7 @@ void ID(int* ID_counter, long mips_reg[], long* pgm_c){
 	if(IF_ID.valid==1 && (*ID_counter)>0){
 			(*ID_counter)--;
 			assert((*ID_counter)>=0);
+			idUtil++;
 	}
 	if((*ID_counter)==0 && ID_EX.valid==0){
   		ID_EX.opcode = IF_ID.opcode;
@@ -434,13 +435,13 @@ void ID(int* ID_counter, long mips_reg[], long* pgm_c){
 				case(4):
 					ID_EX.dest = IF_ID.data2;
 					ID_EX.data1 = mips_reg[IF_ID.data1];
-					ID_EX.data2 = IF_ID.data3;
+					ID_EX.data2 = (IF_ID.data3/4); //offset is in bytes, convert to words
 					ID_EX.data3 = 2;
 					break;
 				case(5):
 					ID_EX.dest = mips_reg[IF_ID.data2];
 					ID_EX.data1 = mips_reg[IF_ID.data1];
-					ID_EX.data2 = IF_ID.data3;
+					ID_EX.data2 = (IF_ID.data3/4); //offset is in bytes, convert to words
 					ID_EX.data3 = 2;
 					break;
 				case(6):
@@ -455,7 +456,6 @@ void ID(int* ID_counter, long mips_reg[], long* pgm_c){
 		IF_ID.valid=0;
 		ID_EX.valid=1;
 		*ID_counter=1;
-		idUtil++;
   	}
   	//If counter >0, do nothing
   	else{
@@ -479,6 +479,7 @@ void EX(int* EX_counter, long* pgm_c){
 	}
 	if(ID_EX.valid==1 && (*EX_counter)>0){
 			(*EX_counter)--;
+			exUtil++;
 			assert((*EX_counter)>=0);
 	}
 	if((*EX_counter)==0 && EX_MEM.valid==0){
@@ -510,7 +511,6 @@ void EX(int* EX_counter, long* pgm_c){
 		ID_EX.valid=0;
 		EX_MEM.valid=1;
 		*EX_counter=excecution_val;	
-		exUtil++;
   	}
   	//If counter>0, do nothing
   	else{
@@ -536,6 +536,7 @@ void MEM(int* MEM_counter){
 
 	if(EX_MEM.valid==1 && (*MEM_counter)>0){
 			(*MEM_counter)--;
+			memUtil++;
 			assert((*MEM_counter)>=0);
 	}
 	if((*MEM_counter)==0 && MEM_WB.valid==0){
@@ -561,7 +562,6 @@ void MEM(int* MEM_counter){
 		EX_MEM.valid=0;
 		MEM_WB.valid=1;
 		*MEM_counter=1;
-		memUtil++;
   	}
   	//If counter>0, do nothing
   	else{
@@ -577,6 +577,7 @@ void WB(int* WB_counter, long mips_reg[]){
 	if(MEM_WB.valid==1 && (*WB_counter)>0){
 			(*WB_counter)--;
 			assert((*WB_counter)>=0);
+			wbUtil++;
 	}
 	if((*WB_counter)==0){
   		if(MEM_WB.opcode<5){
@@ -584,27 +585,12 @@ void WB(int* WB_counter, long mips_reg[]){
 		}
 		MEM_WB.valid=0;
 		*WB_counter=1;
-		wbUtil++;
   	}
   	//If counter>0, do nothing
   	else{
 		return;
 	}
 }
-
-void displayLatch(struct latch l){
-	printf("\n");
-	printf("=====\n");
-	printf("%d\n",l.valid);
-	printf("%d\n",l.opcode);
-	printf("%d\n",l.dest);
-	printf("%d\n",l.data1);
-	printf("%d\n",l.data2);
-	printf("%d\n",l.data3);
-	printf("=====\n");
-}
-
-
 
 int main (int argc, char *argv[]){
 	//Beginning of code1.c
@@ -743,10 +729,11 @@ int main (int argc, char *argv[]){
 		if(MEM_WB.opcode<0){break;}
 	}
 
-	/*Adjust utilization count for nops*/
-	ifUtil -= nopTotal;
-	idUtil -= nopTotal;
-	exUtil -= nopTotal;
+	/*Adjust utilization count for nops, subtract from utilzation 
+	as executing/waiting on nop is not useful work*/
+	ifUtil -= (nopTotal*macces_val);
+	idUtil -= (nopTotal);
+	exUtil -= (nopTotal*excecution_val);
 	memUtil -= nopTotal;
 	wbUtil -= nopTotal;
 
