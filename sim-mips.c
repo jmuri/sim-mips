@@ -111,6 +111,8 @@ char *progScanner(char *instr_str){
   			&& token[0] != '$' && token_cnt != 0 ){
   			return NULL;
   		}
+		if(addi_beq==1 && token_cnt==3 && hasletter(token)){printf("error: should not have $\n"); exit(1);}
+		if(sw_lw==1 && token_cnt==2 && hasletter(token)){printf("error: should not have $\n"); exit(1);}
 		scanned = mycat(scanned, token);
 		scanned = mycat(scanned, " ");
 		token = strtok(NULL, delimiters);
