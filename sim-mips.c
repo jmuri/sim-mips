@@ -82,7 +82,7 @@ char *progScanner(char *instr_str){
 	int sw_lw = 0;
 	int addi_beq = 0;
 	int token_cnt = 0;
-	//make sure input string 
+	//make sure input string is less than max length
 	assert(strlen(instr_str) <= 100);
 
 	//following loop and if statement checks for mismatched parenthesis
@@ -126,6 +126,9 @@ char *regNumberConverter(char *instr_str){
   int token_cnt = 0;
   int sw_lw = 0;
   int addi_beq = 0;
+  //make sure input string is less than max length
+  assert(strlen(instr_str) <= 100);
+
   token = strtok(instr_str, delimiter);
   //check for cases of i-type instructions
   if(!strcmp(token, "lw") || !strcmp(token, "sw")) sw_lw = 1;
@@ -194,6 +197,9 @@ struct inst parser(char *instr_str){
 	int r = 0;
 	int sw_lw = 0;
 	struct inst instruction;
+
+	//make sure input string is less than max length
+	assert(strlen(instr_str) <= 100);
 
 	//sets different struct values based on the opcode
 	token = strtok(instr_str, delimiter);
